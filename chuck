@@ -1,0 +1,28 @@
+#!/usr/local/bin/coffee
+# another comment
+
+fs = require 'fs'
+
+p = require './dst/ascent'
+chuck = require './chuck.coffee'
+
+main = (argv) ->
+  if !argv[1]?
+    console.log "Usage: #{argv[0]} FILE [ FILE ... ]"
+    return
+
+  classes = {}
+
+  for file in argv.slice 1
+    name = file.match(/\/([^\/]+)\.cls$/)?[1]
+    continue unless name
+    cls = fs.readFileSync(file).toString()
+    console.log "now parsing #{name}"
+#    try
+    classes[name] = chuck.analyze p.parse cls
+#    catch err
+#      console.error "File #{file}: #{err}\n"
+
+  console.log JSON.stringify classes, null, 2
+
+main process.argv.slice 1
