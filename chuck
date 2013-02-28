@@ -3,8 +3,8 @@
 
 fs = require 'fs'
 
-p = require './dst/ascent'
-chuck = require './chuck.coffee'
+p = require './lib/ascent-0.0.1'
+chuck = require './src/chuck'
 
 main = (argv) ->
   if !argv[1]?
