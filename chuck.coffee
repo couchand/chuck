@@ -9,6 +9,10 @@ calculateExpressionComplexity = (expression) ->
     return calculateExpressionComplexity expression.negative
   if expression?.inverse?
     return calculateExpressionComplexity expression.inverse
+  if expression?.argv?
+    cc = 0
+    cc += calculateExpressionComplexity arg for arg in expression.argv
+    return cc
   if comparators.test expression?.operator
     return 1 + calculateExpressionComplexity expression.left +
                calculateExpressionComplexity expression.right
