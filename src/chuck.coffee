@@ -43,7 +43,7 @@ calculateStatementComplexity = (statement) ->
   cc = 0
   switch statement.statement
     when "return"
-      cc = calculateExpressionComplexity statement.returns
+      cc = 1 + calculateExpressionComplexity statement.returns
     when "throw"
       cc = calculateExpressionComplexity statement.throws
     when "declaration"
@@ -86,7 +86,9 @@ calculateBlockComplexity = (block) ->
  cc
 
 calculateComplexity = (methodBody) ->
-  1 + calculateBlockComplexity methodBody
+  cc = calculateBlockComplexity methodBody
+  cc += 1 if methodBody[methodBody.length-1].statement isnt 'return'
+  cc
 
 lineCount = (pos) ->
   pos.last_line - pos.first_line + 1
