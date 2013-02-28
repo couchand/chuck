@@ -106,6 +106,7 @@ analyzeClass = (cls) ->
   metrics.linesPerMethod = metrics.lines / metrics.methods.length
   metrics.complexity = sum(m.complexity for m in metrics.methods)
   metrics.complexityPerMethod = metrics.complexity / metrics.methods.length
+  metrics.complexityPerLine = metrics.complexity / metrics.lines
   metrics
 
 module.exports =
