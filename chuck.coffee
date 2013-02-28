@@ -1,10 +1,14 @@
 # chuck, because, why not?
 
-comparators = /\|\||&&|!|!=|==|!==|===|<|<=|>|>=/
+comparators = /\|\||&&|!=|==|!==|===|<|<=|>|>=/
 assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
 operators = /\+|-=|\*|\//
 
 calculateExpressionComplexity = (expression) ->
+  if expression?.negative?
+    return calculateExpressionComplexity expression.negative
+  if expression?.inverse?
+    return calculateExpressionComplexity expression.inverse
   if comparators.test expression?.operator
     return 1 + calculateExpressionComplexity expression.left +
                calculateExpressionComplexity expression.right
