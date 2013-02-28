@@ -11,6 +11,10 @@ calculateExpressionComplexity = (expression) ->
     return calculateExpressionComplexity expression.inverse
   if expression?.parenthesized?
     return calculateExpressionComplexity expression.parenthesized
+  if expression?.receiver?
+    cc = calculateExpressionComplexity expression.receiver
+    cc += calculateExpressionComplexity expression.index if expression.index?
+    return cc
   if expression?.argv?
     cc = 0
     cc += calculateExpressionComplexity arg for arg in expression.argv
