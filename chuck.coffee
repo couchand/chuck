@@ -31,24 +31,25 @@ calculateStatementComplexity = (statement) ->
     when "throw"
       cc = calculateExpressionComplexity statement.throws
     when "declaration"
-      cc = calculateExpressionComplexity statement.initializer
-      cc = if cc then cc + 1 else 0
+      cc = if statement.initializer then 1 + calculateExpressionComplexity statement.initializer else 0
     when "assignment", "prefix", "postfix", "methodCall"
       cc = calculateExpressionComplexity statement.expression
     when "if"
-      cc = if statement.elseBlock then 1 else 0
+      cc = if statement.elseBlock then 2 else 1
       cc += calculateExpressionComplexity statement.condition
       cc += calculateStatementComplexity statement.block
     when "while", "do_while"
-      cc = calculateExpressionComplexity statement.condition
+      cc = 1
+      cc += calculateExpressionComplexity statement.condition
       cc += calculateStatementComplexity statement.block
     when "for"
+      cc = 1
       if statement.initializer?
-        cc = calculateExpressionComplexity statement.initializer
+        cc += calculateExpressionComplexity statement.initializer
         cc += calculateExpressionComplexity statement.condition
         cc += calculateExpressionComplexity statement.increment
       else
-        cc = calculateExpressionComplexity statement.domain
+        cc += calculateExpressionComplexity statement.domain
       cc += calculateStatementComplexity statement.block
     when "dml"
       if statement.operation is 'merge'
