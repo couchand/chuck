@@ -1,5 +1,7 @@
 # chuck, because, why not?
 
+NEST_FACTOR = 2
+
 comparators = /\|\||&&|!=|==|!==|===|<|<=|>|>=/
 assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
 operators = /\+|-=|\*|\//
@@ -51,12 +53,12 @@ calculateStatementComplexity = (statement) ->
     when "if"
       cc = if statement.elseBlock? then 2 else 1
       cc += calculateExpressionComplexity statement.condition
-      cc += calculateStatementComplexity statement.block
-      cc += calculateStatementComplexity statement.elseBlock if statement.elseBlock?
+      cc += NEST_FACTOR * calculateStatementComplexity statement.block
+      cc += NEST_FACTOR * calculateStatementComplexity statement.elseBlock if statement.elseBlock?
     when "while", "do_while"
       cc = 1
       cc += calculateExpressionComplexity statement.condition
-      cc += calculateStatementComplexity statement.block
+      cc += NEST_FACTOR * calculateStatementComplexity statement.block
     when "for"
       cc = 1
       if statement.initializer?
@@ -65,7 +67,7 @@ calculateStatementComplexity = (statement) ->
         cc += calculateExpressionComplexity statement.increment
       else
         cc += calculateExpressionComplexity statement.domain
-      cc += calculateStatementComplexity statement.block
+      cc += NEST_FACTOR * calculateStatementComplexity statement.block
     when "dml"
       if statement.operation is 'merge'
         cc = calculateExpressionComplexity statement.left
