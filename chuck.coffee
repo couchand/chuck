@@ -45,13 +45,14 @@ calculateStatementComplexity = (statement) ->
     when "throw"
       cc = calculateExpressionComplexity statement.throws
     when "declaration"
-      cc = if statement.initializer then 1 + calculateExpressionComplexity statement.initializer else 0
+      cc = if statement.initializer? then 1 + calculateExpressionComplexity statement.initializer else 0
     when "assignment", "prefix", "postfix", "methodCall"
       cc = calculateExpressionComplexity statement.expression
     when "if"
-      cc = if statement.elseBlock then 2 else 1
+      cc = if statement.elseBlock? then 2 else 1
       cc += calculateExpressionComplexity statement.condition
       cc += calculateStatementComplexity statement.block
+      cc += calculateStatementComplexity statement.elseBlock if statement.elseBlock?
     when "while", "do_while"
       cc = 1
       cc += calculateExpressionComplexity statement.condition
