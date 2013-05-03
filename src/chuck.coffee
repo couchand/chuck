@@ -98,20 +98,23 @@ sum = (vals) ->
   s
 
 analyzeClass = (cls) ->
-  metrics = { name: cls.name }
-  metrics.methods = for m in cls.body when m.member is 'method'
-      name: m.name
+  metrics = {}
+  metrics.methods = {}
+  metrics.methodCount = 0
+  for m in cls.body when m.member is 'method'
+    metrics.methodCount++
+    metrics.methods[m.name] =
       lines: lineCount m.position
       parameters: m.parameters.length
       statements: m.body.length
       complexity: calculateComplexity m.body
-  metrics.methodCount = metrics.methods.length
   metrics.propertyCount = (m for m in cls.body when m.member is 'property').length
   metrics.innerClassCount = (m for m in cls.body when m.member is 'inner_class').length
   metrics.lines = cls.position.last_line+1 # due to a bug in the ascent parser position information
-  metrics.linesPerMethod = metrics.lines / metrics.methods.length
-  metrics.complexity = sum(m.complexity for m in metrics.methods)
-  metrics.complexityPerMethod = metrics.complexity / metrics.methods.length
+  metrics.linesPerMethod = metrics.lines / metrics.methodCount
+  metrics.statements = sum(m.statements for n, m of metrics.methods)
+  metrics.complexity = sum(m.complexity for n, m of metrics.methods)
+  metrics.complexityPerMethod = metrics.complexity / metrics.methodCount
   metrics.complexityPerLine = metrics.complexity / metrics.lines
   metrics
 
