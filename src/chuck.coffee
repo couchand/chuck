@@ -4,7 +4,7 @@ NEST_FACTOR = 2
 
 comparators = /\|\||&&|!=|==|!==|===|<|<=|>|>=/
 assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
-operators = /\+|-=|\*|\//
+operators = /\+|-|\*|\//
 
 calculateExpressionComplexity = (expression) ->
   if expression?.negative?
