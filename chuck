@@ -3,7 +3,7 @@
 
 fs = require 'fs'
 
-p = require './lib/ascent-0.0.1'
+p = require './lib/ascent-0.0.2'
 chuck = require './src/chuck'
 
 main = (argv) ->
@@ -14,7 +14,7 @@ main = (argv) ->
   classes = {}
 
   for file in argv.slice 1
-    name = file.match(/\/([^\/]+)\.cls$/)?[1]
+    name = file.match(/\/([^\/]+)\.(cls|trigger)$/)?[1]
     continue unless name
     cls = fs.readFileSync(file).toString()
     console.error "now parsing #{name}"
