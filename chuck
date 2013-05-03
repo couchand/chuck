@@ -19,9 +19,7 @@ main = (argv) ->
     cls = fs.readFileSync(file).toString()
     console.error "now parsing #{name}"
     try
-      cls = chuck.analyze p.parse cls
-      cls.name = name
-      classes.push cls
+      classes.push chuck.analyze p.parse cls
     catch err
       classes.push { name: name, error: "#{err}" }
       console.error "File #{file}: #{err}\n"

@@ -98,7 +98,7 @@ sum = (vals) ->
   s
 
 analyzeClass = (cls) ->
-  metrics = {}
+  metrics = { name: cls.name }
   metrics.methods = for m in cls.body when m.member is 'method'
       name: m.name
       lines: lineCount m.position
