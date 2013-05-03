@@ -11,7 +11,7 @@ main = (argv) ->
     console.error "Usage: #{argv[0]} FILE [ FILE ... ]"
     return
 
-  classes = {}
+  classes = []
 
   for file in argv.slice 1
     name = file.match(/\/([^\/]+)\.cls$/)?[1]
@@ -19,7 +19,9 @@ main = (argv) ->
     cls = fs.readFileSync(file).toString()
     console.error "now parsing #{name}"
     try
-      classes[name] = chuck.analyze p.parse cls
+      cls = chuck.analyze p.parse cls
+      cls.name = name
+      classes.push cls
     catch err
       console.error "File #{file}: #{err}\n"
 
