@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<script src="/_utils/script/jquery.js"></script>
+<script src="/_utils/script/jquery.couch.js"></script>
+<script src="d3.v3.js"></script>
+<script>
+
+var width = 800, height = 500,
+    margin = { top: 20, right: 20, bottom: 20, left: 70 };
+
+var percentile = d3.scale.quantile()
+    .range([0,1,2,3,4,5,6,7,8,9]);
+
+var grade = d3.scale.threshold()
+    .domain([2, 3, 4, 5])
+    .range(['A','B','C','D','F']);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+var focus = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var legend = svg.append("g")
+    .attr("transform", "translate(650,30)");
+
+d3.json("_view/class_details", function(viewdata) {
+  var rows = viewdata["rows"], data = [];
+  var complexities = [];
+
+  rows.forEach(function(cls) {
+    data.push( cls.value );
+  });
+
+  data.forEach(function(cls) {
+    complexities.push( cls.complexity );
+  });
+
+  percentile.domain( complexities );
+});
+
+</script>
