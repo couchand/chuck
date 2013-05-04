@@ -12,7 +12,7 @@ svg text {
 </style>
 <script>
 
-var width = 200, height = 200,
+var width = 100, height = 100,
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
 var percentile = d3.scale.quantile()
@@ -32,54 +32,88 @@ var grade = d3.scale.threshold()
     .domain([2, 3, 4, 5])
     .range(['A','B','C','D','F']);
 
+var gradeNum = d3.scale.ordinal()
+    .domain(['A','B','C','D','F'])
+    .range([1, 2, 3, 4, 5]);
+
 var color = d3.scale.ordinal()
     .domain(['A','B','C','D','F'])
     .range(['#00aa00','#80cc00','#ffee00','#f77700','#ee0000']);
 
 var x = d3.scale.linear()
-    .domain([0, 6])
+    .domain([0, 5])
     .range([0, width]);
 var y = d3.scale.linear()
     .range([height, 0]);
 
+var clientPos = d3.scale.ordinal()
+    .range([
+      { x: 0,       y: 0      },
+      { x: width,   y: 0      },
+      { x: width*2, y: 0      },
+      { x: 0,       y: height },
+      { x: width,   y: height },
+      { x: width*2, y: height }
+    ]);
+
 var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+    .attr("width", 3*width + margin.left + margin.right)
+    .attr("height", 2*height + margin.top + margin.bottom);
 
 var focus = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 d3.json("_view/class_details", function(viewdata) {
-  var rows = viewdata["rows"], data = [];
-  var complexities = [];
+  var rows = viewdata["rows"], data = [], clients = {};
+  var complexities = [], frequencies = [];
 
-  rows.forEach(function(cls) {
-    data.push( cls.value );
-  });
-
-  data.forEach(function(cls) {
-    complexities.push( cls.complexity );
+  rows.forEach(function(row) {
+    data.push( row.value );
+    complexities.push( row.value.complexity );
   });
 
   percentile.domain( complexities );
 
-  var buckets = bucket(data);
+  data.forEach(function(cls) {
+    if ( !clients[cls.client] ) {
+      clients[cls.client] = {
+        A: 0, B: 0, C: 0, D: 0, F: 0
+      }
+    }
 
-  y.domain([0, d3.max(buckets, function(d) { return d.y; })]);
+    var classGrade = grade(evaluate(percentile( cls.complexity )));
+
+    clients[cls.client][classGrade]++;
+  });
+
+  for ( var client in clients ) {
+    for ( var classGrade in clients[client] ) {
+      frequencies.push({
+        client: client,
+        grade: classGrade,
+        count: clients[client][classGrade]
+      });
+    }
+  }
+
+  y.domain([0, d3.max(frequencies, function(d) { return d.count; })]);
 
   var bar = svg.selectAll(".bar")
-      .data(buckets)
+      .data(frequencies)
     .enter().append("g")
       .attr("class", "bar")
+      .attr("title", function(d) { return d.client; })
       .attr("transform", function(d) {
-        return "translate(" + x(d.x) + "," + y(d.y) + ")";
+        var xCoord = clientPos(d.client).x + x(gradeNum(d.grade) - 1);
+        var yCoord = clientPos(d.client).y + y(d.count);
+        return "translate(" + xCoord + "," + yCoord + ")";
       });
 
   bar.append("rect")
       .attr("x", 1)
-      .attr("width", x(buckets[0].dx) - 1)
-      .attr("height", function(d) { return height - y(d.y); })
-      .attr("fill", function(d) { return color(grade(d.x)); });
+      .attr("width", width/5 - 1)
+      .attr("height", function(d) { return height - y(d.count); })
+      .attr("fill", function(d) { return color(d.grade); });
 
 });
 
