@@ -301,7 +301,7 @@ sum = (vals) ->
   s
 
 analyzeClass = (cls) ->
-  metrics = {}
+  metrics = { name: cls.name }
   metrics.methods = []
   hals = []
   for m in cls.body when m.member is 'method'

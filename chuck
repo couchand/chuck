@@ -3,29 +3,22 @@
 
 fs = require 'fs'
 
-p = require './lib/ascent-0.0.2'
-chuck = require './src/chuck'
+scan = require './src/scan'
 
 main = (argv) ->
-  if !argv[1]?
-    console.error "Usage: #{argv[0]} FILE [ FILE ... ]"
+  if !argv[2]?
+    console.error "Usage: #{argv[0]} CLIENT FILE [ FILE ... ]"
     return
 
-  classes = []
+  o = scan(argv[1])
 
-  for file in argv.slice 1
+  for file in argv.slice 2
     name = file.match(/\/([^\/]+)\.(cls|trigger)$/)?[1]
     continue unless name
     cls = fs.readFileSync(file).toString()
     console.error "now parsing #{name}"
-    try
-      results = chuck.analyze p.parse cls
-      results.name = name
-      classes.push results
-    catch err
-      classes.push { name: name, error: "#{err}" }
-      console.error "File #{file}: #{err}\n"
+    o.scan cls
 
-  console.log JSON.stringify classes, null, 2
+  console.log JSON.stringify o, null, 2
 
 main process.argv.slice 1
