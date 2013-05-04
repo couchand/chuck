@@ -4,6 +4,12 @@
 <script src="/_utils/script/jquery.js"></script>
 <script src="/_utils/script/jquery.couch.js"></script>
 <script src="d3.v3.js"></script>
+<style>
+svg text {
+    fill: #333;
+    font: 10pt sans-serif;
+}
+</style>
 <script>
 
 var width = 600, height = 300,
@@ -21,6 +27,10 @@ var bucket = d3.layout.histogram()
 var grade = d3.scale.threshold()
     .domain([2, 3, 4, 5])
     .range(['A','B','C','D','F']);
+
+var color = d3.scale.ordinal()
+    .domain(['A','B','C','D','F'])
+    .range(['#00aa00','#80cc00','#ffee00','#f77700','#ee0000']);
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -63,7 +73,16 @@ d3.json("_view/class_details", function(viewdata) {
   bar.append("rect")
       .attr("x", 1)
       .attr("width", 14)
-      .attr("height", function(d) { return d.y; });
+      .attr("height", function(d) { return d.y; })
+      .attr("fill", function(d) { return color(grade(d.x)); });
+
+  bar.append("text")
+      .attr("dy", "0.75em")
+      .attr("y", 6)
+      .attr("x", 7)
+      .attr("text-anchor", "middle")
+      .text(function(d) { return grade(d.x); });
+
 });
 
 </script>
