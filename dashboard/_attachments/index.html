@@ -68,7 +68,6 @@ d3.json("_view/class_details", function(viewdata) {
     .enter().append("g")
       .attr("class", "bar")
       .attr("transform", function(d) {
-console.log(d.x,x(d.x),d.y,y(d.y));
         return "translate(" + x(d.x) + "," + y(d.y) + ")";
       });
 
