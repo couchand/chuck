@@ -10,6 +10,8 @@ function color(z) {
   return d3.rgb( 255-z, 72, z );
 }
 
+var clients = [];
+
 var width = 800, height = 500,
     margin = { top: 10, right: 10, bottom: 20, left: 70 };
 
@@ -32,20 +34,18 @@ var legend = svg.append("g")
     .attr("transform", "translate(650,30)");
 
 d3.json("_view/client_details", function(viewdata) {
-  var rows = viewdata["rows"], data = [], data2 = [], clients = [];
+  var rows = viewdata["rows"], data = [], data2 = [];
   rows.forEach(function(d) {
     d.value.forEach(function(cls) {
       cls.client = d.key;
       if ( clients.indexOf( cls.client ) == -1 ) clients.push( cls.client );
       data.push(cls);
       if ( !!cls.error ) return;
+      if ( !cls.complexity ) return;
       data2.push(cls);
     });
   });
 
-  x.domain(d3.extent(data.map(function(d) { return d.methods; })));
-  y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
-  z.domain(d3.extent(data.map(function(d) { return d.lines; })));
   w.domain(clients);
 
   var offset = 0;
@@ -66,8 +66,25 @@ d3.json("_view/client_details", function(viewdata) {
     offset += 22;
   });
 
+  focus.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  focus.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+  update(data2);
+});
+
+function update( data ) {
+  x.domain(d3.extent(data.map(function(d) { return d.methods; })));
+  y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
+  z.domain(d3.extent(data.map(function(d) { return d.lines; })));
+
   focus.selectAll("g.cls")
-      .data(data2)
+      .data(data)
     .enter().append("g")
       .attr("class", "cls")
       .attr("transform", function (d) {
@@ -80,17 +97,6 @@ d3.json("_view/client_details", function(viewdata) {
       .attr("style", function (d) {
         return "fill: " + w(d.client);
       });
-
-  focus.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
-
-console.log(y,yAxis);
-
-  focus.append("g")
-      .attr("class", "y axis")
-      .call(yAxis);
-});
+}
 
 </script>
