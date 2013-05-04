@@ -58,10 +58,6 @@ d3.json("_view/class_details", function(viewdata) {
 
   var buckets = bucket(data);
 
-  buckets.forEach(function(b) {
-    console.log(b.x, b.y, b.dx);
-  });
-
   var bar = svg.selectAll(".bar")
       .data(buckets)
     .enter().append("g")
