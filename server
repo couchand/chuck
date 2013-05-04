@@ -1,0 +1,17 @@
+#!/usr/local/bin/coffee
+# another comment
+
+fs = require 'fs'
+
+server = require './src/server'
+
+main = (argv) ->
+  if !argv[2]?
+    console.error "Usage: #{argv[0]} CLIENT CREDS"
+    return
+
+  creds = JSON.parse fs.readFileSync(argv[2]).toString()
+
+  server argv[1], creds, console.log
+
+main process.argv.slice 1
