@@ -13,6 +13,8 @@ svg text {
 <script>
 
 var width = 100, height = 100,
+    offset = { left: width / 2, top: height / 2 },
+    radius = 40, thickness = 15,
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
 var percentile = d3.scale.quantile()
@@ -40,6 +42,14 @@ var x = d3.scale.linear()
 var y = d3.scale.linear()
     .range([height, 0]);
 
+var arc = d3.svg.arc()
+    .outerRadius( radius )
+    .innerRadius( radius - thickness );
+
+var pie = d3.layout.pie()
+    .sort(null)
+    .value(function(d) { return d.count; });
+
 var clientPos = d3.scale.ordinal()
     .range([
       { x: 0,       y: 0      },
@@ -59,7 +69,7 @@ var focus = svg.append("g")
 
 d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data = [], clients = {};
-  var complexities = [], frequencies = [];
+  var complexities = [], frequencies = [], byClient = [];
 
   rows.forEach(function(row) {
     data.push( row.value );
@@ -81,18 +91,25 @@ d3.json("_view/class_details", function(viewdata) {
   });
 
   for ( var client in clients ) {
+    thisClient = [];
+    thisClient.name = client;
     for ( var classGrade in clients[client] ) {
       frequencies.push({
         client: client,
         grade: classGrade,
         count: clients[client][classGrade]
       });
+      thisClient.push({
+        grade: classGrade,
+        count: clients[client][classGrade]
+      });
     }
+    byClient.push(thisClient);
   }
 
   y.domain([0, d3.max(frequencies, function(d) { return d.count; })]);
 
-  var bar = svg.selectAll(".bar")
+  var bar = focus.selectAll(".bar")
       .data(frequencies)
     .enter().append("g")
       .attr("class", "bar")
@@ -108,6 +125,22 @@ d3.json("_view/class_details", function(viewdata) {
       .attr("width", width/5 - 1)
       .attr("height", function(d) { return height - y(d.count); })
       .attr("fill", function(d) { return color(d.grade); });
+
+  var clientCanvas = focus.selectAll(".client")
+      .data(byClient)
+    .enter().append("g")
+      .attr("class","client")
+      .attr("transform",function(d) {
+        var p = clientPos(d.name);
+        return "translate(" + (p.x+offset.left) + "," + (p.y+offset.top) + ")";
+      });
+
+  var slice = clientCanvas.selectAll(".arc")
+      .data(pie)
+    .enter().append("path")
+      .attr("d", arc)
+      .attr("class","arc")
+      .attr("fill", function(d) { return color(d.data.grade); });
 
 });
 
