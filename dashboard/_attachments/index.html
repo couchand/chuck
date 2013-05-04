@@ -119,6 +119,9 @@ function update( data ) {
       .attr("class", "cls")
       .attr("transform", "translate(0,0)")
     .append("circle")
+      .attr("title", function (d) {
+        return d.name;
+      })
       .attr("r",1e-6)
       .attr("style", function (d) {
         return "fill: " + w(d.client);
