@@ -15,7 +15,7 @@ class Server
   scanAll: (cb) ->
     s = @scanner
     @fetcher.getClasses (classes) ->
-      for cls in classes when cls.Name isnt 'BatchLoadReleases'
+      for cls in classes
         s.scan cls.Name, cls.Body
       cb s
 
@@ -23,5 +23,4 @@ module.exports = (client, creds, cb) ->
   s = new Server client, creds, () ->
     s.scanAll (s) ->
       db.saveDoc s, (err) ->
-        throw err if err
-        cb s
+        if err then cb err else cb 'success'
