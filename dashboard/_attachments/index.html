@@ -22,12 +22,6 @@ var evaluate = d3.scale.threshold()
     .domain([3, 6, 8, 9])
     .range([1, 2, 3, 4, 5]);
 
-var bucket = d3.layout.histogram()
-    .bins([1, 2, 3, 4, 5, 6])
-    .value(function(d) {
-      return evaluate(percentile(d.complexity));
-    });
-
 var grade = d3.scale.threshold()
     .domain([2, 3, 4, 5])
     .range(['A','B','C','D','F']);
