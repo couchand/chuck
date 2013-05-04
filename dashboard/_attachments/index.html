@@ -28,6 +28,9 @@ var svg = d3.select("body").append("svg")
 var focus = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+var legend = svg.append("g")
+    .attr("transform", "translate(650,30)");
+
 d3.json("_view/client_details", function(viewdata) {
   var rows = viewdata["rows"], data = [], data2 = [], clients = [];
   rows.forEach(function(d) {
@@ -44,6 +47,24 @@ d3.json("_view/client_details", function(viewdata) {
   y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
   z.domain(d3.extent(data.map(function(d) { return d.lines; })));
   w.domain(clients);
+
+  var offset = 0;
+  clients.forEach(function(client) {
+    var row = legend.append("g")
+        .attr("transform","translate(0,"+offset+")");
+
+    row.append("rect")
+        .attr("width",20)
+        .attr("height",20)
+        .attr("style","fill: "+w(client));
+
+    row.append("text")
+        .attr("x",22)
+        .attr("dy",15)
+        .text(client);
+
+    offset += 22;
+  });
 
   focus.selectAll("g.cls")
       .data(data2)
