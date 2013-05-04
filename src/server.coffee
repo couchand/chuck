@@ -16,4 +16,4 @@ class Server
       cb s
 
 module.exports = (client, creds, cb) ->
-  s = new Server client, creds, cb#() -> s.scanAll (s) -> s
+  s = new Server client, creds, () -> s.scanAll (s) -> cb s
