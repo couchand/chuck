@@ -13,11 +13,11 @@ function color(z) {
 var clients = [];
 
 var width = 800, height = 500,
-    margin = { top: 10, right: 10, bottom: 20, left: 70 };
+    margin = { top: 20, right: 20, bottom: 20, left: 70 };
 
 var x = d3.scale.linear().range([0, width]),
     y = d3.scale.linear().range([height, 0]),
-    z = d3.scale.linear().range([2, 25]),
+    z = d3.scale.linear().range([2, 20]),
     w = d3.scale.category10();
 
 var xAxis = d3.svg.axis().scale(x).orient("bottom"),
