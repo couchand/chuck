@@ -110,7 +110,9 @@ function update( data ) {
   focus.selectAll("g.y").transition().call(yAxis);
 
   var cls = focus.selectAll("g.cls")
-      .data(data);
+      .data(data, function (d) {
+        return d.client + d.name;
+      });
 
   cls.enter()
     .append("g")
