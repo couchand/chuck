@@ -12,8 +12,8 @@ svg text {
 </style>
 <script>
 
-var width = 600, height = 300,
-    margin = { top: 20, right: 20, bottom: 20, left: 70 };
+var width = 200, height = 200,
+    margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
 var percentile = d3.scale.quantile()
     .range([0,1,2,3,4,5,6,7,8,9]);
@@ -31,6 +31,12 @@ var grade = d3.scale.threshold()
 var color = d3.scale.ordinal()
     .domain(['A','B','C','D','F'])
     .range(['#00aa00','#80cc00','#ffee00','#f77700','#ee0000']);
+
+var x = d3.scale.linear()
+    .domain([0, 6])
+    .range([0, width]);
+var y = d3.scale.linear()
+    .range([height, 0]);
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -58,24 +64,27 @@ d3.json("_view/class_details", function(viewdata) {
 
   var buckets = bucket(data);
 
+  y.domain([0, d3.max(buckets, function(d) { return d.y; })]);
+
   var bar = svg.selectAll(".bar")
       .data(buckets)
     .enter().append("g")
       .attr("class", "bar")
       .attr("transform", function(d) {
-        return "translate(" + 15*d.x + "," + (height - d.y) + ")";
+console.log(d.x,x(d.x),d.y,y(d.y));
+        return "translate(" + x(d.x) + "," + y(d.y) + ")";
       });
 
   bar.append("rect")
       .attr("x", 1)
-      .attr("width", 14)
-      .attr("height", function(d) { return d.y; })
+      .attr("width", x(buckets[0].dx) - 1)
+      .attr("height", function(d) { return height - y(d.y); })
       .attr("fill", function(d) { return color(grade(d.x)); });
 
   bar.append("text")
       .attr("dy", "0.75em")
       .attr("y", 6)
-      .attr("x", 7)
+      .attr("x", x(buckets[0].dx) / 2)
       .attr("text-anchor", "middle")
       .text(function(d) { return grade(d.x); });
 
