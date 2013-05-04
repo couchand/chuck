@@ -17,7 +17,7 @@ main = (argv) ->
     continue unless name
     cls = fs.readFileSync(file).toString()
     console.error "now parsing #{name}"
-    o.scan cls
+    o.scan name, cls
 
   console.log JSON.stringify o, null, 2
 

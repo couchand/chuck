@@ -8,7 +8,7 @@ class Scanner
     @environment ?= 'production'
     @classes = []
 
-  scan: (cls) ->
+  scan: (name, cls) ->
     try
       @classes.push chuck.analyze p.parse cls
     catch err
