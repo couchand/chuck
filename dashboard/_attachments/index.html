@@ -36,12 +36,6 @@ var color = d3.scale.ordinal()
     .domain(['A','B','C','D','F'])
     .range(['#00aa00','#80cc00','#ffee00','#f77700','#ee0000']);
 
-var x = d3.scale.linear()
-    .domain([0, 5])
-    .range([0, width]);
-var y = d3.scale.linear()
-    .range([height, 0]);
-
 var arc = d3.svg.arc()
     .outerRadius( radius )
     .innerRadius( radius - thickness );
@@ -69,7 +63,7 @@ var focus = svg.append("g")
 
 d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data = [], clients = {};
-  var complexities = [], frequencies = [], byClient = [];
+  var complexities = [], byClient = [];
 
   rows.forEach(function(row) {
     data.push( row.value );
@@ -94,11 +88,6 @@ d3.json("_view/class_details", function(viewdata) {
     thisClient = [];
     thisClient.name = client;
     for ( var classGrade in clients[client] ) {
-      frequencies.push({
-        client: client,
-        grade: classGrade,
-        count: clients[client][classGrade]
-      });
       thisClient.push({
         grade: classGrade,
         count: clients[client][classGrade]
@@ -106,25 +95,6 @@ d3.json("_view/class_details", function(viewdata) {
     }
     byClient.push(thisClient);
   }
-
-  y.domain([0, d3.max(frequencies, function(d) { return d.count; })]);
-
-  var bar = focus.selectAll(".bar")
-      .data(frequencies)
-    .enter().append("g")
-      .attr("class", "bar")
-      .attr("title", function(d) { return d.client; })
-      .attr("transform", function(d) {
-        var xCoord = clientPos(d.client).x + x(gradeNum(d.grade) - 1);
-        var yCoord = clientPos(d.client).y + y(d.count);
-        return "translate(" + xCoord + "," + yCoord + ")";
-      });
-
-  bar.append("rect")
-      .attr("x", 1)
-      .attr("width", width/5 - 1)
-      .attr("height", function(d) { return height - y(d.count); })
-      .attr("fill", function(d) { return color(d.grade); });
 
   var clientCanvas = focus.selectAll(".client")
       .data(byClient)
