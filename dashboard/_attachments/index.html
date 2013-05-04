@@ -10,7 +10,9 @@ function color(z) {
   return d3.rgb( 255-z, 72, z );
 }
 
-var clients = [];
+var clients = [], data = [];
+
+var duration = 400;
 
 var width = 800, height = 500,
     margin = { top: 20, right: 20, bottom: 20, left: 70 };
@@ -34,7 +36,7 @@ var legend = svg.append("g")
     .attr("transform", "translate(650,30)");
 
 d3.json("_view/client_details", function(viewdata) {
-  var rows = viewdata["rows"], data = [], data2 = [];
+  var rows = viewdata["rows"], data2 = [];
   rows.forEach(function(d) {
     d.value.forEach(function(cls) {
       cls.client = d.key;
@@ -78,25 +80,55 @@ d3.json("_view/client_details", function(viewdata) {
   update(data2);
 });
 
+function showClient( client ) {
+  var data2 = [];
+
+  data.forEach(function(cls) {
+    if ( !!cls.error ) return;
+    if ( !cls.complexity ) return;
+    if ( client != cls.client ) return;
+    data2.push(cls);
+  });
+
+  update(data2);
+}
+
 function update( data ) {
   x.domain(d3.extent(data.map(function(d) { return d.methods; })));
   y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
   z.domain(d3.extent(data.map(function(d) { return d.lines; })));
 
-  focus.selectAll("g.cls")
-      .data(data)
-    .enter().append("g")
+  focus.selectAll("g.x").transition().call(xAxis);
+  focus.selectAll("g.y").transition().call(yAxis);
+
+  var cls = focus.selectAll("g.cls")
+      .data(data);
+
+  cls.enter()
+    .append("g")
       .attr("class", "cls")
+      .attr("transform", "translate(0,0)")
+    .append("circle")
+      .attr("r",1e-6)
+      .attr("style", function (d) {
+        return "fill: " + w(d.client);
+      });
+
+  var clsUpdate = cls.transition()
+      .duration(duration)
       .attr("transform", function (d) {
         return "translate(" + x(d.methods) + "," + y(d.complexity) + ")";
-      })
-      .append("circle")
+      });
+
+  clsUpdate.select("circle")
       .attr("r", function (d) {
         return z(d.lines);
       })
       .attr("style", function (d) {
         return "fill: " + w(d.client);
       });
+
+  cls.exit().transition().remove();
 }
 
 </script>
