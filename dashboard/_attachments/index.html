@@ -45,9 +45,6 @@ var svg = d3.select("body").append("svg")
 var focus = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var legend = svg.append("g")
-    .attr("transform", "translate(650,30)");
-
 d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data = [];
   var complexities = [];
