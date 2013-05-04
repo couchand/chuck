@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<script src="/_utils/script/jquery.js"></script>
+<script src="/_utils/script/jquery.couch.js"></script>
+<script src="d3.v3.js"></script>
+<script>
+
+function color(z) {
+  return d3.rgb( 255-z, 72, z );
+}
+
+var width = 800, height = 500,
+    margin = { top: 10, right: 10, bottom: 20, left: 70 };
+
+var x = d3.scale.linear().range([0, width]),
+    y = d3.scale.linear().range([height, 0]),
+    z = d3.scale.linear().range([2, 25]),
+    w = d3.scale.category10();
+
+var xAxis = d3.svg.axis().scale(x).orient("bottom"),
+    yAxis = d3.svg.axis().scale(y).orient("left");
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+var focus = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.json("_view/client_details", function(viewdata) {
+  var rows = viewdata["rows"], data = [], data2 = [], clients = [];
+  rows.forEach(function(d) {
+    d.value.forEach(function(cls) {
+      cls.client = d.key;
+      if ( clients.indexOf( cls.client ) == -1 ) clients.push( cls.client );
+      data.push(cls);
+      if ( !!cls.error ) return;
+      data2.push(cls);
+    });
+  });
+
+  x.domain(d3.extent(data.map(function(d) { return d.methods; })));
+  y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
+  z.domain(d3.extent(data.map(function(d) { return d.lines; })));
+  w.domain(clients);
+
+  focus.selectAll("g.cls")
+      .data(data2)
+    .enter().append("g")
+      .attr("class", "cls")
+      .attr("transform", function (d) {
+        return "translate(" + x(d.methods) + "," + y(d.complexity) + ")";
+      })
+      .append("circle")
+      .attr("r", function (d) {
+        return z(d.lines);
+      })
+      .attr("style", function (d) {
+        return "fill: " + w(d.client);
+      });
+
+  focus.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+console.log(y,yAxis);
+
+  focus.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+});
+
+</script>
