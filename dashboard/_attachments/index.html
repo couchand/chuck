@@ -7,14 +7,14 @@
 <style>
 svg text {
     fill: #333;
-    font: 10pt sans-serif;
+    font: 6pt sans-serif;
 }
 </style>
 <script>
 
 var width = 100, height = 100,
     offset = { left: width / 2, top: height / 2 },
-    radius = 40, thickness = 15,
+    radius = 48, thickness = 18,
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
 var percentile = d3.scale.quantile()
@@ -111,6 +111,11 @@ d3.json("_view/class_details", function(viewdata) {
       .attr("d", arc)
       .attr("class","arc")
       .attr("fill", function(d) { return color(d.data.grade); });
+
+  clientCanvas.append("text")
+      .attr("dy","0.35em")
+      .style("text-anchor", "middle")
+      .text(function(d) { return d.name; });
 
 });
 
