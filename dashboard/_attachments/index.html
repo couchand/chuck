@@ -10,7 +10,7 @@ function color(z) {
   return d3.rgb( 255-z, 72, z );
 }
 
-var clients = [], data = [];
+var clients = [], data = [], showing = {};
 
 var duration = 400;
 
@@ -40,7 +40,10 @@ d3.json("_view/client_details", function(viewdata) {
   rows.forEach(function(d) {
     d.value.forEach(function(cls) {
       cls.client = d.key;
-      if ( clients.indexOf( cls.client ) == -1 ) clients.push( cls.client );
+      if ( clients.indexOf( cls.client ) == -1 ) {
+        clients.push( cls.client );
+        showing[cls.client] = true;
+      }
       data.push(cls);
       if ( !!cls.error ) return;
       if ( !cls.complexity ) return;
@@ -53,6 +56,7 @@ d3.json("_view/client_details", function(viewdata) {
   var offset = 0;
   clients.forEach(function(client) {
     var row = legend.append("g")
+        .datum(client)
         .attr("transform","translate(0,"+offset+")");
 
     row.append("rect")
@@ -64,6 +68,8 @@ d3.json("_view/client_details", function(viewdata) {
         .attr("x",22)
         .attr("dy",15)
         .text(client);
+
+    row.on("click", function(d){ toggleClient(d); });
 
     offset += 22;
   });
@@ -80,13 +86,15 @@ d3.json("_view/client_details", function(viewdata) {
   update(data2);
 });
 
-function showClient( client ) {
+function toggleClient( client ) {
   var data2 = [];
+
+  showing[client] = !showing[client];
 
   data.forEach(function(cls) {
     if ( !!cls.error ) return;
     if ( !cls.complexity ) return;
-    if ( client != cls.client ) return;
+    if ( !showing[cls.client] ) return;
     data2.push(cls);
   });
 
