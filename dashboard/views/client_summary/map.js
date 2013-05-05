@@ -4,10 +4,10 @@ function(doc) {
   }
 
   var m = {
-    classes: 0,
-    parse: 0,
-    complexity: 0,
-    lines: 0
+    "classes": 0,
+    "parse": 0,
+    "complexity": 0,
+    "lines": 0
   };
 
   for(class in doc.classes){

@@ -8,11 +8,11 @@ function(doc) {
     if( !cls.error ){
       emit( doc.client + ":" + cls.name,
       {
-        client: doc.client,
-        name: cls.name,
-        complexity: cls.complexity || 0,
-        methods: cls.methodCount,
-        lines: cls.lines
+        "client": doc.client,
+        "name": cls.name,
+        "complexity": cls.complexity || 0,
+        "methods": cls.methodCount,
+        "lines": cls.lines
       });
     }
   }
