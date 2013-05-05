@@ -1,4 +1,8 @@
 function(doc) {
+  if ( !doc.classes ) {
+    return;
+  }
+
   var classes = [];
 
   for(class in doc.classes){

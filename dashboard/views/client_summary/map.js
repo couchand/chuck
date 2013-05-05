@@ -1,4 +1,8 @@
 function(doc) {
+  if ( !doc.classes ) {
+    return;
+  }
+
   var m = {
     classes: 0,
     parse: 0,

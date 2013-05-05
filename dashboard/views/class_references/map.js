@@ -1,5 +1,5 @@
 function (doc) {
-  if ( !doc.classes[0] || !doc.classes[0].SymbolTable ) {
+  if ( !doc.classes || !doc.classes[0] || !doc.classes[0].SymbolTable ) {
     return;
   }
   for ( i in doc.classes ) {

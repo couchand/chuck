@@ -1,6 +1,10 @@
 function(doc) {
+  if ( !doc.classes) {
+    return;
+  }
+
   for(class in doc.classes){
-  var cls = doc.classes[class];
+    var cls = doc.classes[class];
     if( !cls.error ){
       emit( doc.client + ":" + cls.name,
       {
