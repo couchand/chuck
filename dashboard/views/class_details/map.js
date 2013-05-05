@@ -1,5 +1,5 @@
 function(doc) {
-  if ( !doc.classes) {
+  if ( !doc.classes || !!doc.classes[0].SymbolTable ) {
     return;
   }
 
