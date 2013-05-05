@@ -23,12 +23,9 @@ class Fetcher
 
   setContainerId: (id) ->
     throw "unable to create!" unless id?
-    console.error id
     @containerId = id
-    console.error @containerId
 
   createJunction: (cls) ->
-    console.error @containerId
     @conn.tooling.insert('ApexClassMember', {
       'MetadataContainerId': @containerId
       'ContentEntityId': cls.Id
@@ -36,12 +33,7 @@ class Fetcher
     }).then (id) -> throw "unable to create junction" unless id?
 
   createJunctions: (classes) ->
-#    promise.allOrNone (@createJunction cls for cls in classes)
-    console.error @containerId
-    junctions = []
-    for cls in classes
-      junctions.push @createJunction cls
-    promise.allOrNone junctions
+    promise.allOrNone (@createJunction cls for cls in classes)
 
   validateContainer: ->
     @conn.tooling.deploy @containerId, yes
@@ -56,7 +48,7 @@ class Fetcher
     that = @
     @getClasses (classes) ->
       that.createContainer()
-        .then(-> console.error that.containerId; that.createJunctions classes)
+        .then(-> that.createJunctions classes)
         .then(-> that.validateContainer())
         .then(-> that.queryContainer())
         .then (symbolTables) ->
