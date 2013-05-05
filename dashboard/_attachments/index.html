@@ -81,7 +81,7 @@ d3.json("_view/class_details", function(viewdata) {
 
     var classGrade = grade(evaluate(percentile( cls.complexity )));
 
-    clients[cls.client][classGrade]++;
+    clients[cls.client][classGrade] += cls.lines;
   });
 
   for ( var client in clients ) {
