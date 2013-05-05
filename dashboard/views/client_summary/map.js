@@ -1,5 +1,5 @@
 function(doc) {
-  if ( !doc.classes || !!doc.classes[0].SymbolTable ) {
+  if ( !doc.classes || "undefined" != typeof doc.classes[0].SymbolTable ) {
     return;
   }
 
