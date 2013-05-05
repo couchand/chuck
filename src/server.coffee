@@ -19,8 +19,14 @@ class Server
         s.scan cls.Name, cls.Body
       cb s
 
+handleErr = (cb) ->
+  (err) ->
+    if err then cb err else cb 'success'
+
 module.exports = (client, creds, cb) ->
   s = new Server client, creds, () ->
+    s.fetcher.getSymbolTables (t) ->
+      m = { client: client, classes: t }
+      db.saveDoc m, handleErr(cb)
     s.scanAll (s) ->
-      db.saveDoc s, (err) ->
-        if err then cb err else cb 'success'
+      db.saveDoc s, handleErr(cb)
