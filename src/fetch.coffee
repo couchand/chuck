@@ -13,7 +13,7 @@ class Fetcher
       cb()
 
   getClasses: (cb) ->
-    @conn.query('SELECT Id, Name, Body FROM ApexClass').then cb
+    @conn.query('SELECT Id, Name, Body FROM ApexClass WHERE NamespacePrefix = NULL').then cb
 
   createContainer: ->
     that = @
