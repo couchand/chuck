@@ -116,7 +116,10 @@ function update( data ) {
       .attr("transform", "translate(0,0)")
     .append("circle")
       .attr("title", function (d) {
-        return d.name;
+        return d.name +
+            " [" + d.complexity + "] " +
+            d.methods + " methods, " +
+            d.lines + " lines";
       })
       .attr("r",1e-6)
       .attr("style", function (d) {
