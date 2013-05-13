@@ -42,7 +42,7 @@ var arc = d3.svg.arc()
 
 var pie = d3.layout.pie()
     .sort(null)
-    .value(function(d) { return d.count; });
+    .value(function(d) { return d.lines; });
 
 var clientPos = d3.scale.ordinal()
     .range([
@@ -69,7 +69,7 @@ var focus = svg.append("g")
 
 d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data = [], clients = {};
-  var complexities = [], byClient = [];
+  var complexities = [], byClient = [], classes = {};
 
   rows.forEach(function(row) {
     data.push( row.value );
@@ -83,11 +83,15 @@ d3.json("_view/class_details", function(viewdata) {
       clients[cls.client] = {
         A: 0, B: 0, C: 0, D: 0, F: 0
       }
+      classes[cls.client] = {
+        A: 0, B: 0, C: 0, D: 0, F: 0
+      }
     }
 
     var classGrade = grade(evaluate(percentile( cls.complexity )));
 
     clients[cls.client][classGrade] += cls.lines;
+    classes[cls.client][classGrade]++;
   });
 
   for ( var client in clients ) {
@@ -96,7 +100,8 @@ d3.json("_view/class_details", function(viewdata) {
     for ( var classGrade in clients[client] ) {
       thisClient.push({
         grade: classGrade,
-        count: clients[client][classGrade]
+        lines: clients[client][classGrade],
+        count: classes[client][classGrade]
       });
     }
     byClient.push(thisClient);
@@ -106,6 +111,7 @@ d3.json("_view/class_details", function(viewdata) {
       .data(byClient)
     .enter().append("g")
       .attr("class","client")
+      .attr("title", function(d) { return d.grade + ": " + d.count + " classes, " + d.lines + " lines"; })
       .attr("transform",function(d) {
         var p = clientPos(d.name);
         return "translate(" + (p.x+offset.left) + "," + (p.y+offset.top) + ")";
