@@ -20,7 +20,9 @@ class ClientDoc
     t = @
     db.getDoc @id, (err, doc) ->
       if err
-        t.doc = {}
+        t.doc =
+          client: t.name
+          scans: []
       else
         t.doc = doc
       cb()
@@ -36,6 +38,7 @@ class ClientDoc
 class Scanner
   constructor: (@client, @environment) ->
     @environment ?= 'production'
+    @timestamp = new Date()
     @classes = []
 
   scan: (name, cls) ->
@@ -47,9 +50,7 @@ class Scanner
   save: (cb) ->
     t = @
     m = new ClientDoc @client, ->
-      m.doc.client = t.client
-      m.doc.environment = t.environment
-      m.doc.classes = t.classes
+      m.doc.scans.unshift t
       m.save cb
 
 module.exports = (client, environment) ->
