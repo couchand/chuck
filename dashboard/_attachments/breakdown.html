@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <body>
+<style>
+    .cls circle {
+        opacity: .6
+    }
+</style>
 <script src="/_utils/script/jquery.js"></script>
 <script src="/_utils/script/jquery.couch.js"></script>
 <script src="d3.v3.js"></script>
@@ -15,7 +20,7 @@ var width = 800, height = 500,
 
 var x = d3.scale.linear().range([0, width]),
     y = d3.scale.linear().range([height, 0]),
-    z = d3.scale.linear().range([2, 200]),
+    z = d3.scale.linear().range([2, 100]),
     w = d3.scale.category10();
 
 var xAxis = d3.svg.axis().scale(x).orient("bottom"),
