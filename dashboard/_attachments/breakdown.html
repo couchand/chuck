@@ -98,9 +98,9 @@ function toggleClient( client ) {
 }
 
 function update( data ) {
-  x.domain(d3.extent(data.map(function(d) { return d.methods; })));
+  x.domain(d3.extent(data.map(function(d) { return d.lines; })));
   y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
-  z.domain(d3.extent(data.map(function(d) { return d.lines; })));
+  z.domain(d3.extent(data.map(function(d) { return d.methods; })));
 
   focus.selectAll("g.x").transition().call(xAxis);
   focus.selectAll("g.y").transition().call(yAxis);
@@ -117,7 +117,7 @@ function update( data ) {
     .append("circle")
       .attr("title", function (d) {
         return d.name +
-            " [" + d.complexity + "] " +
+            " [" + Math.round(d.complexity) + "] " +
             d.methods + " methods, " +
             d.lines + " lines";
       })
@@ -129,12 +129,12 @@ function update( data ) {
   var clsUpdate = cls.transition()
       .duration(duration)
       .attr("transform", function (d) {
-        return "translate(" + x(d.methods) + "," + y(d.complexity) + ")";
+        return "translate(" + x(d.lines) + "," + y(d.complexity) + ")";
       });
 
   clsUpdate.select("circle")
       .attr("r", function (d) {
-        return Math.sqrt(z(d.lines));
+        return Math.sqrt(z(d.methods));
       })
       .attr("style", function (d) {
         return "fill: " + w(d.client);
