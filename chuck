@@ -21,4 +21,6 @@ main = (argv) ->
 
   console.log JSON.stringify o, null, 2
 
+  o.save console.log
+
 main process.argv.slice 1

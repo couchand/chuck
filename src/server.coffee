@@ -29,4 +29,4 @@ module.exports = (client, creds, cb) ->
       m = { client: client, classes: t }
       db.saveDoc m, handleErr(cb)
     s.scanAll (s) ->
-      db.saveDoc s, handleErr(cb)
+      s.save handleErr(cb)
