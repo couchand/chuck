@@ -15,7 +15,7 @@ var width = 800, height = 500,
 
 var x = d3.scale.linear().range([0, width]),
     y = d3.scale.linear().range([height, 0]),
-    z = d3.scale.linear().range([2, 20]),
+    z = d3.scale.linear().range([2, 200]),
     w = d3.scale.category10();
 
 var xAxis = d3.svg.axis().scale(x).orient("bottom"),
@@ -34,10 +34,12 @@ var legend = svg.append("g")
 d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data2 = [];
   rows.forEach(function(d) {
-    data2.push(d.value);
     if ( clients.indexOf( d.value.client ) == -1 ) {
       clients.push( d.value.client );
       showing[d.value.client] = true;
+    }
+    if ( d.value.methods > 0 ) {
+        data2.push(d.value);
     }
   });
 
@@ -128,7 +130,7 @@ function update( data ) {
 
   clsUpdate.select("circle")
       .attr("r", function (d) {
-        return z(d.lines);
+        return Math.sqrt(z(d.lines));
       })
       .attr("style", function (d) {
         return "fill: " + w(d.client);
