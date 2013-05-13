@@ -121,7 +121,11 @@ d3.json("_view/class_details", function(viewdata) {
     .enter().append("path")
       .attr("d", arc)
       .attr("class","arc")
-      .attr("title", function(d) { return d.grade + ": " + d.count + " classes, " + d.lines + " lines"; })
+      .attr("title", function(d) {
+        return d.data.grade + ": " +
+               d.data.count + " classes, " +
+               d.data.lines + " lines";
+      })
       .attr("fill", function(d) { return color(d.data.grade); });
 
   clientCanvas.append("text")
