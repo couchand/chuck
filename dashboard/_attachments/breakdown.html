@@ -31,20 +31,14 @@ var focus = svg.append("g")
 var legend = svg.append("g")
     .attr("transform", "translate(650,30)");
 
-d3.json("_view/client_details", function(viewdata) {
+d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data2 = [];
   rows.forEach(function(d) {
-    d.value.forEach(function(cls) {
-      cls.client = d.key;
-      if ( clients.indexOf( cls.client ) == -1 ) {
-        clients.push( cls.client );
-        showing[cls.client] = true;
-      }
-      data.push(cls);
-      if ( !!cls.error ) return;
-      if ( !cls.complexity ) return;
-      data2.push(cls);
-    });
+    data2.push(d.value);
+    if ( clients.indexOf( d.value.client ) == -1 ) {
+      clients.push( d.value.client );
+      showing[d.value.client] = true;
+    }
   });
 
   w.domain(clients);
