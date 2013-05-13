@@ -39,6 +39,7 @@ d3.json("_view/class_details", function(viewdata) {
       showing[d.value.client] = true;
     }
     if ( d.value.methods > 0 ) {
+        data.push(d.value);
         data2.push(d.value);
     }
   });
@@ -84,8 +85,6 @@ function toggleClient( client ) {
   showing[client] = !showing[client];
 
   data.forEach(function(cls) {
-    if ( !!cls.error ) return;
-    if ( !cls.complexity ) return;
     if ( !showing[cls.client] ) return;
     data2.push(cls);
   });
