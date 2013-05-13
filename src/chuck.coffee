@@ -1,6 +1,6 @@
 # chuck, because, why not?
 
-NEST_FACTOR = 2
+NEST_FACTOR = 1.1
 
 comparators = /\|\||&&|!=|==|!==|===|<|<=|>|>=/
 assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
