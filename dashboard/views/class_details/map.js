@@ -1,10 +1,10 @@
 function(doc) {
-  if ( !doc.classes || "undefined" != typeof doc.classes[0].SymbolTable ) {
+  if ( !doc.client || !doc.scans ) {
     return;
   }
 
-  for(class in doc.classes){
-    var cls = doc.classes[class];
+  for(class in doc.scans[0].classes){
+    var cls = doc.scans[0].classes[class];
     if( !cls.error ){
       emit( doc.client + ":" + cls.name, {
         "client": doc.client,
