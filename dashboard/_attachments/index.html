@@ -111,7 +111,6 @@ d3.json("_view/class_details", function(viewdata) {
       .data(byClient)
     .enter().append("g")
       .attr("class","client")
-      .attr("title", function(d) { return d.grade + ": " + d.count + " classes, " + d.lines + " lines"; })
       .attr("transform",function(d) {
         var p = clientPos(d.name);
         return "translate(" + (p.x+offset.left) + "," + (p.y+offset.top) + ")";
@@ -122,6 +121,7 @@ d3.json("_view/class_details", function(viewdata) {
     .enter().append("path")
       .attr("d", arc)
       .attr("class","arc")
+      .attr("title", function(d) { return d.grade + ": " + d.count + " classes, " + d.lines + " lines"; })
       .attr("fill", function(d) { return color(d.data.grade); });
 
   clientCanvas.append("text")
