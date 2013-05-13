@@ -18,8 +18,8 @@ var duration = 400;
 var width = 800, height = 500,
     margin = { top: 20, right: 20, bottom: 20, left: 70 };
 
-var x = d3.scale.linear().range([0, width]),
-    y = d3.scale.linear().range([height, 0]),
+var x = d3.scale.log().rangeRound([0, width]),
+    y = d3.scale.log().rangeRound([height, 0]),
     z = d3.scale.linear().range([2, 100]),
     w = d3.scale.category10();
 
