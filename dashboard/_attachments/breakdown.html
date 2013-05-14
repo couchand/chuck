@@ -36,6 +36,17 @@
 <script src="d3.v3.js"></script>
 <script>
 
+var params = window.location.search.substring(1).split("&");
+var selectedClient;
+
+for ( var i in params ) {
+    var pair = params[i].split("=");
+
+    if ( pair[0] == 'client' ) {
+        selectedClient = decodeURIComponent(pair[1]);
+    }
+}
+
 var clients = [], data = [], showing = {};
 
 var duration = 400;
@@ -93,14 +104,18 @@ d3.json("_view/class_details", function(viewdata) {
   rows.forEach(function(d) {
     if ( clients.indexOf( d.value.client ) == -1 ) {
       clients.push( d.value.client );
-      showing[d.value.client] = true;
+      if ( !selectedClient ) {
+        showing[d.value.client] = true;
+      }
+      else {
+        showing[d.value.client] = d.value.client == selectedClient;
+      }
     }
     if ( d.value.methods > 0 ) {
         data.push(d.value);
         data2.push(d.value);
     }
   });
-
   w.domain(clients);
 
   var offset = 0, width = 0;
@@ -140,13 +155,13 @@ d3.json("_view/class_details", function(viewdata) {
       .attr("class", "y axis")
       .call(yAxis);
 
-  update(data2);
+  toggleClient();
 });
 
 function toggleClient( client ) {
   var data2 = [];
 
-  showing[client] = !showing[client];
+  !!client && (showing[client] = !showing[client]);
 
   data.forEach(function(cls) {
     if ( !showing[cls.client] ) return;
