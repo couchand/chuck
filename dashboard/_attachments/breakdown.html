@@ -54,6 +54,25 @@ var duration = 400;
 var width = 800, height = 500,
     margin = { top: 50, right: 50, bottom: 50, left: 50 };
 
+var percentile = d3.scale.quantile()
+    .range([0,1,2,3,4,5,6,7,8,9]);
+
+var evaluate = d3.scale.threshold()
+    .domain([3, 6, 8, 9])
+    .range([1, 2, 3, 4, 5]);
+
+var grade = d3.scale.threshold()
+    .domain([2, 3, 4, 5])
+    .range(['A','B','C','D','F']);
+
+var gradeNum = d3.scale.ordinal()
+    .domain(['A','B','C','D','F'])
+    .range([1, 2, 3, 4, 5]);
+
+var color = d3.scale.ordinal()
+    .domain(['A','B','C','D','F'])
+    .range(['#00aa00','#80cc00','#ffee00','#f77700','#ee0000']);
+
 var x = d3.scale.log().rangeRound([0, width]),
     y = d3.scale.log().rangeRound([height, 0]),
     z = d3.scale.sqrt().range([10, 100]),
@@ -79,16 +98,6 @@ var svg = d3.select("body").append("svg")
 var focus = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var legend = svg.append("g")
-    .attr("class", "legend")
-    .attr("transform", "translate(80,30)");
-
-legend.append("rect")
-    .attr("class", "bg")
-    .attr("transform", "translate(-3,-3)")
-    .attr("width", 100)
-    .attr("height", 60);
-
 svg.append("g")
     .attr("transform", "rotate(90)")
     .append("text")
@@ -100,51 +109,47 @@ svg.append("text")
     .text("Lines of Code");
 
 d3.json("_view/class_details", function(viewdata) {
-  var rows = viewdata["rows"], data2 = [];
-  rows.forEach(function(d) {
-    if ( clients.indexOf( d.value.client ) == -1 ) {
-      clients.push( d.value.client );
+  var rows = viewdata["rows"], data2 = [], lineNos = {};
+  var complexities = [], byClient = [], classes = {};
+
+  rows.forEach(function(row) {
+    if ( clients.indexOf( row.value.client ) == -1 ) {
+      clients.push( row.value.client );
       if ( !selectedClient ) {
-        showing[d.value.client] = true;
+        showing[row.value.client] = true;
       }
       else {
-        showing[d.value.client] = d.value.client == selectedClient;
+        showing[row.value.client] = row.value.client == selectedClient;
       }
     }
-    if ( d.value.methods > 0 ) {
-        data.push(d.value);
-        data2.push(d.value);
+    if ( !row.value.error && row.value.methods > 0 ) {
+        data.push(row.value);
+        data2.push(row.value);
+    }
+
+    if ( ! row.value.error ) {
+        complexities.push( row.value.complexity );
     }
   });
-  w.domain(clients);
 
-  var offset = 0, width = 0;
-  clients.forEach(function(client) {
-    var row = legend.append("g")
-        .datum(client)
-        .attr("transform","translate(0,"+offset+")");
+  percentile.domain( complexities );
 
-    row.append("rect")
-        .attr("width",20)
-        .attr("height",20)
-        .attr("class", "client")
-        .attr("style","fill: "+w(client));
+  data.forEach(function(cls) {
+    if ( !lineNos[cls.client] ) {
+      lineNos[cls.client] = {
+        A: 0, B: 0, C: 0, D: 0, F: 0
+      };
+      lineNos[cls.client] = {
+        A: 0, B: 0, C: 0, D: 0, F: 0
+      };
+    }
 
-    row.append("text")
-        .attr("x",22)
-        .attr("dy",17)
-        .text(client);
+    if ( !!cls.error ) {
+        return;
+    }
 
-    row.on("click", function(d){ toggleClient(d); });
-
-    var thisWidth = row.select("text").node().getComputedTextLength()
-    width = thisWidth > width ? thisWidth : width;
-
-    offset += 22;
+    cls.grade = grade(evaluate(percentile( cls.complexity )));
   });
-  legend.select(".bg")
-      .attr("width", width+27)
-      .attr("height", offset+4);
 
   focus.append("g")
       .attr("class", "x axis")
@@ -221,7 +226,7 @@ function update( data ) {
       })
       .attr("r",1e-6)
       .attr("style", function (d) {
-        return "fill: " + w(d.client);
+        return "fill: " + color(d.grade);
       });
 
   var clsUpdate = cls.transition()
@@ -235,7 +240,7 @@ function update( data ) {
         return Math.sqrt(z(d.methods));
       })
       .attr("style", function (d) {
-        return "fill: " + w(d.client);
+        return "fill: " + color(d.grade);
       });
 
   cls.exit().transition().remove();
