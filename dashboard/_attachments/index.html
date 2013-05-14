@@ -14,7 +14,7 @@ svg text {
 
 var width = 100, height = 100,
     offset = { left: width / 2, top: height / 2 },
-    radius = 48, thickness = 18,
+    radius = 48, thickness = 22,
     margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
 var percentile = d3.scale.quantile()
@@ -40,9 +40,16 @@ var arc = d3.svg.arc()
     .outerRadius( radius )
     .innerRadius( radius - thickness );
 
+var innerArc = d3.svg.arc()
+    .outerRadius( radius - thickness );
+
 var pie = d3.layout.pie()
     .sort(null)
     .value(function(d) { return d.lines; });
+
+var innerPie = d3.layout.pie()
+    .sort(null)
+    .value(function(d) { return d.count; });
 
 var clientPos = d3.scale.ordinal()
     .range([
@@ -70,10 +77,14 @@ var focus = svg.append("g")
 d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data = [], clients = {};
   var complexities = [], byClient = [], classes = {};
+  var parseClients = {}, noParseClients = {}, parseByClient = [];
 
   rows.forEach(function(row) {
     data.push( row.value );
-    complexities.push( row.value.complexity );
+
+    if ( ! row.value.error ) {
+        complexities.push( row.value.complexity );
+    }
   });
 
   percentile.domain( complexities );
@@ -82,16 +93,24 @@ d3.json("_view/class_details", function(viewdata) {
     if ( !clients[cls.client] ) {
       clients[cls.client] = {
         A: 0, B: 0, C: 0, D: 0, F: 0
-      }
+      };
       classes[cls.client] = {
         A: 0, B: 0, C: 0, D: 0, F: 0
-      }
+      };
+      parseClients[cls.client] = 0;
+      noParseClients[cls.client] = 0;
+    }
+
+    if ( !!cls.error ) {
+        noParseClients[cls.client]++;
+        return;
     }
 
     var classGrade = grade(evaluate(percentile( cls.complexity )));
 
     clients[cls.client][classGrade] += cls.lines;
     classes[cls.client][classGrade]++;
+    parseClients[cls.client]++;
   });
 
   for ( var client in clients ) {
@@ -105,7 +124,31 @@ d3.json("_view/class_details", function(viewdata) {
       });
     }
     byClient.push(thisClient);
+    parseByClient.push([{
+      name: client,
+      status: 'parse',
+      count: parseClients[client]
+    }, {
+      name: client,
+      status: 'error',
+      count: noParseClients[client]
+    }]);
   }
+
+  focus.selectAll(".clientParse")
+      .data(parseByClient)
+    .enter().append("g")
+      .attr("class","clientParse")
+      .attr("transform",function(d) {
+        var p = clientPos(d[0].name);
+        return "translate(" + (p.x+offset.left) + "," + (p.y+offset.top) + ")";
+      })
+    .selectAll(".status")
+      .data(innerPie)
+    .enter().append("path")
+      .attr("d", innerArc)
+      .attr("class", "status")
+      .attr("fill", function(d) { return d.data.status == 'error' ? '#fa9' : '#ddd'; });
 
   var clientCanvas = focus.selectAll(".client")
       .data(byClient)

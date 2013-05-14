@@ -14,5 +14,12 @@ function(doc) {
         "lines": cls.lines
       });
     }
+    else {
+      emit( doc.client + ":" + cls.name, {
+        "client": doc.client,
+        "name": cls.name,
+        "error": cls.error
+      });
+    }
   }
 }
