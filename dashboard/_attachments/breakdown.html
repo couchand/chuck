@@ -2,6 +2,9 @@
 <meta charset="utf-8">
 <body>
 <style>
+    text {
+        font-family: sans-serif;
+    }
     .cls circle {
         opacity: .6
     }
@@ -12,8 +15,18 @@
         shape-rendering: crispEdges;
     }
     .axis text {
-        font-family: sans-serif;
         font-size: 10px;
+    }
+    .legend .bg {
+        fill: #fff;
+        stroke: #ccc;
+    }
+    .legend text {
+        font-size: 16px;
+    }
+    .legend .client {
+        cursor: pointer;
+        stroke: #555;
     }
 </style>
 <script src="/_utils/script/jquery.js"></script>
@@ -26,7 +39,7 @@ var clients = [], data = [], showing = {};
 var duration = 400;
 
 var width = 800, height = 500,
-    margin = { top: 20, right: 20, bottom: 20, left: 70 };
+    margin = { top: 50, right: 50, bottom: 50, left: 50 };
 
 var x = d3.scale.log().rangeRound([0, width]),
     y = d3.scale.log().rangeRound([height, 0]),
@@ -54,7 +67,24 @@ var focus = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var legend = svg.append("g")
+    .attr("class", "legend")
     .attr("transform", "translate(80,30)");
+
+legend.append("rect")
+    .attr("class", "bg")
+    .attr("transform", "translate(-3,-3)")
+    .attr("width", 100)
+    .attr("height", 60);
+
+svg.append("g")
+    .attr("transform", "rotate(90)")
+    .append("text")
+    .attr("transform", "translate(" + (height*0.2+margin.top) + ",-5)")
+    .text("Complexity");
+
+svg.append("text")
+    .attr("transform", "translate(" + (width*0.8+margin.left) + "," + (margin.top+height+margin.bottom-15) + ")")
+    .text("Lines of Code");
 
 d3.json("_view/class_details", function(viewdata) {
   var rows = viewdata["rows"], data2 = [];
@@ -71,7 +101,7 @@ d3.json("_view/class_details", function(viewdata) {
 
   w.domain(clients);
 
-  var offset = 0;
+  var offset = 0, width = 0;
   clients.forEach(function(client) {
     var row = legend.append("g")
         .datum(client)
@@ -80,17 +110,24 @@ d3.json("_view/class_details", function(viewdata) {
     row.append("rect")
         .attr("width",20)
         .attr("height",20)
+        .attr("class", "client")
         .attr("style","fill: "+w(client));
 
     row.append("text")
         .attr("x",22)
-        .attr("dy",15)
+        .attr("dy",17)
         .text(client);
 
     row.on("click", function(d){ toggleClient(d); });
 
+    var thisWidth = row.select("text").node().getComputedTextLength()
+    width = thisWidth > width ? thisWidth : width;
+
     offset += 22;
   });
+  legend.select(".bg")
+      .attr("width", width+27)
+      .attr("height", offset+4);
 
   focus.append("g")
       .attr("class", "x axis")
