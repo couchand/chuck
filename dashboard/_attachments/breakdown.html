@@ -75,7 +75,7 @@ var color = d3.scale.ordinal()
 
 var x = d3.scale.log().rangeRound([0, width]),
     y = d3.scale.log().rangeRound([height, 0]),
-    z = d3.scale.sqrt().range([20, 100]),
+    z = d3.scale.sqrt().range([4, 12]),
     w = d3.scale.category20();
 
 var formatLog = d3.format(",.0f");
@@ -237,7 +237,7 @@ function update( data ) {
 
   clsUpdate.select("circle")
       .attr("r", function (d) {
-        return Math.sqrt(z(d.methods));
+        return z(d.methods);
       })
       .attr("style", function (d) {
         return "fill: " + color(d.grade);
