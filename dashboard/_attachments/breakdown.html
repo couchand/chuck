@@ -4,6 +4,7 @@
 <style>
     text {
         font-family: sans-serif;
+        fill: #555;
     }
     .cls circle {
         opacity: .6
@@ -11,7 +12,7 @@
     .axis path,
     .axis line {
         fill: none;
-        stroke: black;
+        stroke: #555;
         shape-rendering: crispEdges;
     }
     .axis text {
@@ -23,6 +24,7 @@
     }
     .legend text {
         font-size: 16px;
+        cursor: pointer;
     }
     .legend .client {
         cursor: pointer;
@@ -51,12 +53,12 @@ var formatLog = d3.format(",.0f");
 var xAxis = d3.svg.axis()
         .scale(x)
         .tickFormat(formatLog)
-        .tickSize(6, 3, 0)
+        .tickSize(0)
         .orient("bottom"),
     yAxis = d3.svg.axis()
         .scale(y)
         .tickFormat(formatLog)
-        .tickSize(6, 3, 0)
+        .tickSize(0)
         .orient("left");
 
 var svg = d3.select("body").append("svg")
