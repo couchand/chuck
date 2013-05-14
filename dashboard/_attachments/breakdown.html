@@ -162,25 +162,29 @@ function update( data ) {
   focus.selectAll("g.x").transition().call(xAxis);
   focus.selectAll("g.y").transition().call(yAxis);
 
-  focus.selectAll("line.x")
-      .data(x.ticks())
-      .enter().append("line")
+  xgridlines = focus.selectAll("line.x")
+      .data(x.ticks());
+  xgridlines.enter().append("line")
       .attr("class","x")
-      .attr("x1", x)
-      .attr("x2", x)
       .attr("y1", 0)
       .attr("y2", height)
-      .attr("stroke", "#ccc")
+      .attr("stroke", "#ccc");
+  xgridlines.transition()
+      .attr("x1", x)
+      .attr("x2", x);
+  xgridlines.exit().remove();
 
-  focus.selectAll("line.y")
-      .data(y.ticks())
-      .enter().append("line")
+  ygridlines = focus.selectAll("line.y")
+      .data(y.ticks());
+  ygridlines.enter().append("line")
       .attr("class","y")
       .attr("x1", 0)
       .attr("x2", width)
+      .attr("stroke", "#ccc");
+  ygridlines.transition()
       .attr("y1", y)
-      .attr("y2", y)
-      .attr("stroke", "#ccc")
+      .attr("y2", y);
+  ygridlines.exit().remove();
 
   var cls = focus.selectAll("g.cls")
       .data(data, function (d) {
