@@ -9,6 +9,9 @@ svg text {
     fill: #333;
     font: 6pt sans-serif;
 }
+.client {
+    cursor: pointer;
+}
 </style>
 <script>
 
@@ -175,6 +178,10 @@ d3.json("_view/class_details", function(viewdata) {
       .attr("dy","0.35em")
       .style("text-anchor", "middle")
       .text(function(d) { return d.name; });
+
+  clientCanvas.on("click", function(d) {
+    window.location.href = "breakdown.html?client="+encodeURIComponent(d.name);
+  });
 
 });
 
