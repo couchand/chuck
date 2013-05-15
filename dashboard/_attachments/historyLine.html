@@ -52,6 +52,17 @@ var x = d3.time.scale()
 
 var color = d3.scale.category20();
 
+var stack = d3.layout.stack()
+    .offset("wiggle")
+    .values(function(d) { return d.values; })
+    .x(function(d) { return d.timestamp; })
+    .y(function(d) { return d.complexity; });
+
+var area = d3.svg.area()
+    .x(function(d) { return x(d.timestamp); })
+    .y0(function(d) { return y(d.y0); })
+    .y1(function(d) { return y(d.y0 + d.y); });
+
 var xAxis = d3.svg.axis()
         .scale(x)
         .tickSize(0)
@@ -77,12 +88,20 @@ var scansByClass = d3.nest()
         .key(function(d) { return d.name; })
         .sortValues(function(a, b) { return d3.ascending(a.timestamp, b.timestamp); });
 
+var classByDate = d3.nest()
+        .key(function(d) { return d.timestamp; })
+        .key(function(d) { return d.name; });
+
+var dateByClass = d3.nest()
+        .key(function(d) { return d.name; })
+        .key(function(d) { return d.timestamp; });
+
 function cleanData(data) {
     var clean = [];
-
     for ( var i in data ) {
         if ( !!data.error ) continue;
         var d = data[i].value;
+        if ( !d.complexity ) continue;
         clean.push({
             name: d.name,
             timestamp: new Date(d.timestamp),
@@ -91,17 +110,58 @@ function cleanData(data) {
             methods: d.methods
         });
     }
-
     return clean;
 }
 
+function squareData(data) {
+    var out = []
+    var classesByDate = classByDate.entries(data);
+    var datesByClass = dateByClass.map(data);
+    for ( var cls in datesByClass ) {
+        var row = [];
+        for ( var i in classesByDate ) {
+            var dt = classesByDate[i].key;
+            if ( dt in datesByClass[cls] ) {
+                var prev = datesByClass[cls][""+dt][0];
+                row.push({
+                    name: cls,
+                    timestamp: new Date(dt),
+                    complexity: prev.complexity,
+                    lines: prev.lines,
+                    methods: prev.methods
+                });
+            }
+            else {
+                row.push({
+                    name: cls,
+                    timestamp: new Date(dt),
+                    complexity: 0,
+                    lines: 0,
+                    methods: 0
+                });
+            }
+        }
+        out.push({ key: cls, values: row });
+    }
+    return out;
+}
+
+var scans;
 d3.json(clientHistoryEndpoint(getClientFromUrl()), function(viewdata) {
     var rows = cleanData(viewdata["rows"]);
 
-    var scans = scansByClass.entries(rows);
+    scans = squareData(rows);
 
     x.domain( d3.extent( rows, function(d) { return d.timestamp; } ) );
-    y.domain( d3.extent( rows, function(d) { return d.complexity; } ) );
+
+    var max = d3.max(classByDate.entries(rows), function(v) {
+        return d3.sum(v.values, function(d) {
+            if ( !d.values || !d.values[0] ) return 0;
+            return d.values[0].complexity;
+        });
+    });
+
+    y.domain([0, max]);
 
     focus.append("g")
         .attr("class", "x axis")
@@ -112,15 +172,12 @@ d3.json(clientHistoryEndpoint(getClientFromUrl()), function(viewdata) {
         .attr("class", "y axis")
         .call(yAxis);
 
-    var cls = focus.selectAll(".class")
-        .data( scans )
-      .enter().append("g")
-        .attr("class","class");
-
-    cls.append("path")
-        .attr("class","line")
-        .attr("stroke", function(d) { return color(d.key); })
-        .attr("d", function(d) { return line(d.values) });
+    focus.append("g").selectAll("path")
+        .data(stack(scans))
+      .enter().append("path")
+        .attr("d", function(d) { return area(d.values); })
+        .attr("title", function(d) { return d.key; })
+        .style("fill", function(d) { return color(d.key); });
 });
 
 </script>
