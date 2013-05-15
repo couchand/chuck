@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<style>
+    text {
+        font-family: sans-serif;
+        fill: #555;
+    }
+    .cls circle {
+        opacity: .6
+    }
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #555;
+        shape-rendering: crispEdges;
+    }
+    .axis text {
+        font-size: 10px;
+    }
+    .legend .bg {
+        fill: #fff;
+        stroke: #ccc;
+    }
+    .legend text {
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .legend .client {
+        cursor: pointer;
+        stroke: #555;
+    }
+</style>
+<script src="/_utils/script/jquery.js"></script>
+<script src="/_utils/script/jquery.couch.js"></script>
+<script src="d3.v3.js"></script>
+<script>
+
+var scansByClass;
+
+var params = window.location.search.substring(1).split("&");
+var selectedClient;
+
+for ( var i in params ) {
+    var pair = params[i].split("=");
+
+    if ( pair[0] == 'client' ) {
+        selectedClient = decodeURIComponent(pair[1]);
+    }
+}
+
+var clients = [], data = [], showing = {};
+
+var duration = 400;
+
+var width = 800, height = 500,
+    margin = { top: 50, right: 50, bottom: 50, left: 50 };
+
+var x = d3.scale.log().rangeRound([0, width]),
+    y = d3.scale.log().rangeRound([height, 0]),
+    z = d3.scale.sqrt().range([4, 12]),
+    w = d3.scale.category20();
+
+var bisect = d3.bisector(function(d) { return d.timestamp; });
+
+var formatLog = d3.format(",.0f");
+
+var xAxis = d3.svg.axis()
+        .scale(x)
+        .tickFormat(formatLog)
+        .tickSize(0)
+        .orient("bottom"),
+    yAxis = d3.svg.axis()
+        .scale(y)
+        .tickFormat(formatLog)
+        .tickSize(0)
+        .orient("left");
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+var focus = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var legend = svg.append("g")
+    .attr("class", "legend")
+    .attr("transform", "translate(80,30)");
+
+legend.append("rect")
+    .attr("class", "bg")
+    .attr("transform", "translate(-3,-3)")
+    .attr("width", 100)
+    .attr("height", 60);
+
+svg.append("g")
+    .attr("transform", "rotate(90)")
+    .append("text")
+    .attr("transform", "translate(" + (height*0.2+margin.top) + ",-5)")
+    .text("Complexity");
+
+svg.append("text")
+    .attr("transform", "translate(" + (width*0.8+margin.left) + "," + (margin.top+height+margin.bottom-15) + ")")
+    .text("Lines of Code");
+
+d3.json("_view/class_history?startkey=%22"+selectedClient+"%22+&endkey=%22"+selectedClient+"ZZZ%22", function(viewdata) {
+  var rows = viewdata["rows"], data2 = [];
+
+  rows.forEach(function(d) {
+    if ( clients.indexOf( d.value.client ) == -1 ) {
+      clients.push( d.value.client );
+      if ( !selectedClient ) {
+        showing[d.value.client] = true;
+      }
+      else {
+        showing[d.value.client] = d.value.client == selectedClient;
+      }
+    }
+    d.value.timestamp = new Date(d.value.timestamp);   
+    if ( d.value.methods > 0 ) {
+        data.push(d.value);
+        data2.push(d.value);
+    }
+  });
+  w.domain(clients);
+
+  var offset = 0, width = 0;
+  clients.forEach(function(client) {
+    var row = legend.append("g")
+        .datum(client)
+        .attr("transform","translate(0,"+offset+")");
+
+    row.append("rect")
+        .attr("width",20)
+        .attr("height",20)
+        .attr("class", "client")
+        .attr("style","fill: "+w(client));
+
+    row.append("text")
+        .attr("x",22)
+        .attr("dy",17)
+        .text(client);
+
+    row.on("click", function(d){ toggleClient(d); });
+
+    var thisWidth = row.select("text").node().getComputedTextLength()
+    width = thisWidth > width ? thisWidth : width;
+
+    offset += 22;
+  });
+  legend.select(".bg")
+      .attr("width", width+27)
+      .attr("height", offset+4);
+
+  focus.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  focus.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+  scansByClass = d3.nest()
+    .key(function(d) { return d.name; })
+    .sortValues(function(a, b) {
+      d3.ascending(a.timestamp, b.timestamp);
+    })
+    .map(data);
+//  update(data);
+//  toggleClient();
+});
+/*
+function toggleClient( client ) {
+  var data2 = [];
+
+  !!client && (showing[client] = !showing[client]);
+
+  data.forEach(function(cls) {
+    if ( !showing[cls.client] ) return;
+    data2.push(cls);
+  });
+
+  update(data2);
+}
+*/
+function tweenTime() {
+  var time = d3.interpolateNumber( new Date(2012,04,28).getTime(), new Date(2013,02,22).getTime());
+  return function (t){ displayTime(new Date(time(t))); };
+}
+
+
+function displayTime( time ) {
+console.log(time);
+  updateClasses(interpolateData(time));
+}
+
+function interpolateData( time ) {
+  var results = []
+  for ( cls in scansByClass ) {
+    results.push(interpolateValues(scansByClass[cls], time));
+  }
+  return results;
+}
+
+function interpolateValues(scans, time) {
+  var i = bisect.left(scans, time, 0, scans.length - 1),
+    a = scans[i];
+  if ( i > 0 ) {
+    var b = scans[i - 1];
+    return {
+      client: a.client,
+      name: a.name,
+      methods: interpolateValue( 'methods', a, b, time ),
+      lines: interpolateValue( 'lines', a, b, time ),
+      complexity: interpolateValue( 'complexity', a, b, time ),
+    };
+  }
+  return {
+    client: a.client,
+    name: a.name,
+    methods: a.methods,
+    lines: a.lines,
+    complexity: a.complexity
+  };
+}
+
+function interpolateValue( field, a, b, time ) {
+  var x = a[field] || 0, y = b[field] || 0,
+    p = (time - a.timestamp) / (b.timestamp - a.timestamp);
+  return x * (1 - p) + y * p;
+}
+
+function update( data ) {
+  x.domain(d3.extent(data.map(function(d) { return d.lines; })));
+  y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
+  z.domain(d3.extent(data.map(function(d) { return d.methods; })));
+
+  focus.selectAll("g.x").transition().call(xAxis);
+  focus.selectAll("g.y").transition().call(yAxis);
+
+  xgridlines = focus.selectAll("line.x")
+      .data(x.ticks());
+  xgridlines.enter().append("line")
+      .attr("class","x")
+      .attr("y1", 0)
+      .attr("y2", height)
+      .attr("stroke", "#ccc");
+  xgridlines.transition()
+      .attr("x1", x)
+      .attr("x2", x);
+  xgridlines.exit().remove();
+
+  ygridlines = focus.selectAll("line.y")
+      .data(y.ticks());
+  ygridlines.enter().append("line")
+      .attr("class","y")
+      .attr("x1", 0)
+      .attr("x2", width)
+      .attr("stroke", "#ccc");
+  ygridlines.transition()
+      .attr("y1", y)
+      .attr("y2", y);
+  ygridlines.exit().remove();
+
+  var cls = focus.selectAll("g.cls")
+      .data(data, function (d) {
+        return d.client + d.name;
+      });
+
+  cls.enter()
+    .append("g")
+      .attr("class", "cls")
+      .attr("transform", "translate(0,0)")
+    .append("circle")
+      .attr("title", function (d) {
+        return d.name +
+            " [" + Math.round(d.complexity) + "] " +
+            d.methods + " methods, " +
+            d.lines + " lines";
+      })
+      .attr("r",1e-6)
+      .attr("style", function (d) {
+        return "fill: " + w(d.timestamp);
+      });
+
+  var clsUpdate = cls.transition()
+      .duration(duration)
+      .attr("transform", function (d) {
+        return "translate(" + x(d.lines) + "," + y(d.complexity) + ")";
+      });
+
+  clsUpdate.select("circle")
+      .attr("r", function (d) {
+        return z(d.methods);
+      })
+      .attr("style", function (d) {
+        return "fill: " + w(d.timestamp);
+      });
+
+  cls.exit().transition().remove();
+}
+
+function updateClasses(data){
+    focus.selectAll("g.cls")
+    .data(data, function(d){return d.client+d.name;})
+      .attr("transform", function (d) {
+        return "translate(" + x(d.lines) + "," + y(d.complexity) + ")";
+      });
+}
+</script>
