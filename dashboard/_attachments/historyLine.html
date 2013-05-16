@@ -90,6 +90,7 @@ var scansByClass = d3.nest()
 
 var classByDate = d3.nest()
         .key(function(d) { return d.timestamp; })
+        .sortKeys(function(a, b) { return d3.ascending( new Date(a), new Date(b) ); })
         .key(function(d) { return d.name; });
 
 var dateByClass = d3.nest()
