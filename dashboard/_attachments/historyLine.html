@@ -15,9 +15,10 @@
     .axis text {
         font-size: 10px;
     }
-    .class .line {
-        fill: none;
-        opacity: 0.7;
+    .brush rect {
+        opacity: .4;
+        fill: #99f;
+        stroke: #77d;
     }
 </style>
 <script src="/_utils/script/jquery.js"></script>
@@ -42,13 +43,18 @@ function clientHistoryEndpoint(client) {
     return "_view/class_history?startkey=%22" + c + "%22+&endkey=%22" + c + "ZZZ%22";
 }
 
-var width = 800, height = 500,
-    margin = { top: 50, right: 50, bottom: 50, left: 50 };
+var width = 800, height = 400, height2 = 80,
+    margin = { top: 50, right: 50, bottom: 10, left: 50 },
+    margin2 = { top: 10, right: 50, bottom: 50, left:50 };
 
 var x = d3.time.scale()
         .range([0, width]),
+    x2 = d3.time.scale()
+        .range([0, width]),
     y = d3.scale.linear()
-        .range([height, 0]);
+        .range([height, 0]),
+    y2 = d3.scale.linear()
+        .range([height2, 0]);
 
 var color = d3.scale.category20();
 
@@ -63,8 +69,17 @@ var area = d3.svg.area()
     .y0(function(d) { return y(d.y0); })
     .y1(function(d) { return y(d.y0 + d.y); });
 
+var area2 = d3.svg.area()
+    .x(function(d) { return x2(d.timestamp); })
+    .y0(function(d) { return y2(d.y0); })
+    .y1(function(d) { return y2(d.y0 + d.y); });
+
 var xAxis = d3.svg.axis()
         .scale(x)
+        .tickSize(0)
+        .orient("bottom"),
+    xAxis2 = d3.svg.axis()
+        .scale(x2)
         .tickSize(0)
         .orient("bottom"),
     yAxis = d3.svg.axis()
@@ -72,17 +87,28 @@ var xAxis = d3.svg.axis()
         .tickSize(0)
         .orient("left");
 
-var line = d3.svg.line()
-    .interpolate("basis")
-    .x(function(d) { return x(d.timestamp); })
-    .y(function(d) { return y(d.complexity); });
+var brush = d3.svg.brush()
+    .x(x2)
+    .on("brush", brushed);
 
+var svgWidth = width + margin.left + margin.right,
+    svgHeight = height + height2 + margin.top + margin.bottom + margin2.top + margin2.bottom;
 var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
+
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+  .append("rect")
+    .attr("width", width)
+    .attr("height", height);
 
 var focus = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var contextTop = margin.top + height + margin.bottom + margin2.top;
+var context = svg.append("g")
+    .attr("transform", "translate(" + margin2.left + "," + contextTop + ")");
 
 var scansByClass = d3.nest()
         .key(function(d) { return d.name; })
@@ -147,6 +173,14 @@ function squareData(data) {
     return out;
 }
 
+function brushed() {
+    x.domain(brush.empty() ? x2.domain() : brush.extent());
+    focus.select("path.cls")
+        .attr("d", function(d) { return area(d.values); });
+    focus.select(".x.axis")
+        .call(xAxis);
+}
+
 var scans;
 d3.json(clientHistoryEndpoint(getClientFromUrl()), function(viewdata) {
     var rows = cleanData(viewdata["rows"]);
@@ -154,6 +188,7 @@ d3.json(clientHistoryEndpoint(getClientFromUrl()), function(viewdata) {
     scans = squareData(rows);
 
     x.domain( d3.extent( rows, function(d) { return d.timestamp; } ) );
+    x2.domain( d3.extent( rows, function(d) { return d.timestamp; } ) );
 
     var max = d3.max(classByDate.entries(rows), function(v) {
         return d3.sum(v.values, function(d) {
@@ -163,22 +198,44 @@ d3.json(clientHistoryEndpoint(getClientFromUrl()), function(viewdata) {
     });
 
     y.domain([0, max]);
+    y2.domain([0, max]);
 
     focus.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
+    context.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height2 + ")")
+        .call(xAxis2);
+
     focus.append("g")
         .attr("class", "y axis")
         .call(yAxis);
 
-    focus.append("g").selectAll("path")
+    focus.append("g").selectAll("path.cls")
         .data(stack(scans))
       .enter().append("path")
+        .attr("class", "cls")
+        .attr("clip-path", "url(#clip)")
         .attr("d", function(d) { return area(d.values); })
         .attr("title", function(d) { return d.key; })
         .style("fill", function(d) { return color(d.key); });
+
+    context.append("g").selectAll("path")
+        .data(stack(scans))
+      .enter().append("path")
+        .attr("clip-path", "url(#clip)")
+        .attr("d", function(d) { return area2(d.values); })
+        .style("fill", function(d) { return color(d.key); });
+
+    context.append("g")
+        .attr("class", "x brush")
+        .call(brush)
+      .selectAll("rect")
+        .attr("y", -6)
+        .attr("height", height2 + 7);
 });
 
 </script>
