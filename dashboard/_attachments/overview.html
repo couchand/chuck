@@ -93,7 +93,7 @@ svg.append("g")
     .attr("transform", "rotate(90)")
     .append("text")
     .attr("transform", "translate(" + (height*0.2+margin.top) + ",-5)")
-    .text("Complexity");
+    .text("Complexity per Method");
 
 svg.append("text")
     .attr("transform", "translate(" + (width*0.8+margin.left) + "," + (margin.top+height+margin.bottom-15) + ")")
@@ -111,6 +111,10 @@ d3.json("_view/class_details", function(viewdata) {
         showing[d.value.client] = d.value.client == selectedClient;
       }
     }
+
+    if ( ! d.value.methods ) return; // count as one method, ignore for percentiles
+    d.value.complexity = d.value.complexity / d.value.methods;
+
     if ( d.value.methods > 0 ) {
         data.push(d.value);
         data2.push(d.value);

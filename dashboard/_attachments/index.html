@@ -85,6 +85,9 @@ d3.json("_view/class_details", function(viewdata) {
   rows.forEach(function(row) {
     data.push( row.value );
 
+    if ( ! row.value.methods ) return; // count as one method, ignore for percentiles
+    row.value.complexity = row.value.complexity / row.value.methods;
+
     if ( ! row.value.error ) {
         complexities.push( row.value.complexity );
     }
