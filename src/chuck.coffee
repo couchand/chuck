@@ -156,6 +156,12 @@ calculateStatementComplexity = (statement, options) ->
         cc += calculateExpressionComplexity statement.right, options
       else
         cc = calculateExpressionComplexity statement.expression, options
+    when "try"
+      cc = statement.catches.length
+      cc += calculateStatementComplexity statement.block, options
+      for catchClause in statement.catches
+        cc += cnf * calculateStatementComplexity catchClause.block, options
+      cc += calculateStatementComplexity statement.finallyBlock, options if statement.finallyBlock?
     when "block"
       cc = calculateBlockComplexity statement.block, options
     else 0
@@ -218,6 +224,18 @@ countStatementHalstead = (statement) ->
       else
         hal = countExpressionHalstead statement.expression
       hal.operators.push statement.operation
+      hal
+    when "try"
+      hals = (countStatementHalstead catchClause.block for catchClause in statement.catches)
+      hals.push countStatementHalstead statement.block
+      hals.push countStatementHalstead statement.finallyBlock if statement.finallyBlock?
+      hal = combineHalsteads hals
+      hal.operators.push 'try'
+      for catchClause in statement.catches
+        hal.operators.push 'catch'
+        hal.operands.push resolveContainer catchClause.parameter.type
+        hal.operands.push catchClause.parameter.name
+      hal.operators.push 'finally' if statement.finallyBlock?
       hal
     when "block"
       countBlockHalstead statement.block
