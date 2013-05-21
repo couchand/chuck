@@ -59,7 +59,6 @@ var x = d3.time.scale()
 var color = d3.scale.category20();
 
 var stack = d3.layout.stack()
-    .offset("wiggle")
     .values(function(d) { return d.values; })
     .x(function(d) { return d.timestamp; })
     .y(function(d) { return d.complexity; });
