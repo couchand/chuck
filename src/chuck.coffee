@@ -6,7 +6,7 @@ comparators = /\|\||&&|!=|==|!==|===|<|<=|>|>=/
 assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
 operators = /\+|-|\*|\//
 
-calculateExpressionComplexity = (expression) ->
+calculateExpressionComplexity = (expression, options) ->
   if expression?.negative?
     return calculateExpressionComplexity expression.negative
   if expression?.inverse?
@@ -39,54 +39,59 @@ calculateExpressionComplexity = (expression) ->
                calculateExpressionComplexity expression.falseValue
   0
 
-calculateStatementComplexity = (statement) ->
+calculateStatementComplexity = (statement, options) ->
+  cnf = options.conditionalNestFactor
+  lnf = options.loopNestFactor
   cc = 0
   switch statement.statement
     when "return"
-      cc = 1 + calculateExpressionComplexity statement.returns
+      cc = 1 + calculateExpressionComplexity statement.returns, options
     when "throw"
-      cc = calculateExpressionComplexity statement.throws
+      cc = calculateExpressionComplexity statement.throws, options
     when "declaration"
       cc = if statement.initializer? then 1 + calculateExpressionComplexity statement.initializer else 0
     when "assignment", "prefix", "postfix", "methodCall"
-      cc = calculateExpressionComplexity statement.expression
+      cc = calculateExpressionComplexity statement.expression, options
     when "if"
       cc = if statement.elseBlock? then 2 else 1
-      cc += calculateExpressionComplexity statement.condition
-      cc += NEST_FACTOR * calculateStatementComplexity statement.block
-      cc += NEST_FACTOR * calculateStatementComplexity statement.elseBlock if statement.elseBlock?
+      cc += calculateExpressionComplexity statement.condition, options
+      cc += cnf * calculateStatementComplexity statement.block, options
+      cc += cnf * calculateStatementComplexity statement.elseBlock, options if statement.elseBlock?
     when "while", "do_while"
       cc = 1
-      cc += calculateExpressionComplexity statement.condition
-      cc += NEST_FACTOR * calculateStatementComplexity statement.block
+      cc += calculateExpressionComplexity statement.condition, options
+      cc += lnf * calculateStatementComplexity statement.block, options
     when "for"
       cc = 1
       if statement.initializer?
-        cc += calculateExpressionComplexity statement.initializer
-        cc += calculateExpressionComplexity statement.condition
-        cc += calculateExpressionComplexity statement.increment
+        cc += calculateExpressionComplexity statement.initializer, options
+        cc += calculateExpressionComplexity statement.condition, options
+        cc += calculateExpressionComplexity statement.increment, options
       else
-        cc += calculateExpressionComplexity statement.domain
-      cc += NEST_FACTOR * calculateStatementComplexity statement.block
+        cc += calculateExpressionComplexity statement.domain, options
+      cc += lnf * calculateStatementComplexity statement.block, options
     when "dml"
       if statement.operation is 'merge'
-        cc = calculateExpressionComplexity statement.left
-        cc += calculateExpressionComplexity statement.right
+        cc = calculateExpressionComplexity statement.left, options
+        cc += calculateExpressionComplexity statement.right, options
       else
-        cc = calculateExpressionComplexity statement.expression
+        cc = calculateExpressionComplexity statement.expression, options
     when "block"
-      cc = calculateBlockComplexity statement.block
+      cc = calculateBlockComplexity statement.block, options
     else 0
   return cc
 
-calculateBlockComplexity = (block) ->
+calculateBlockComplexity = (block, options) ->
  cc = 0
  for statement in block
-   cc += calculateStatementComplexity statement
+   cc += calculateStatementComplexity statement, options
  cc
 
-calculateComplexity = (methodBody) ->
-  cc = calculateBlockComplexity methodBody
+calculateComplexity = (methodBody, options) ->
+  options ?= {}
+  options.conditionalNestFactor ?= 1
+  options.loopNestFactor ?= 1
+  cc = calculateBlockComplexity methodBody, options
   cc += 1 if methodBody[methodBody.length-1].statement isnt 'return'
   cc
 
@@ -105,6 +110,10 @@ analyzeClass = (cls) ->
       parameters: m.parameters.length
       statements: m.body.length
       complexity: calculateComplexity m.body
+      nestWeightedComplexity: calculateComplexity(m.body,
+        conditionalNestFactor: NEST_FACTOR
+        loopNestFactor: NEST_FACTOR
+      )
   metrics.methodCount = metrics.methods.length
   metrics.propertyCount = (m for m in cls.body when m.member is 'property').length
   metrics.innerClassCount = (m for m in cls.body when m.member is 'inner_class').length
