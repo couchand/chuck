@@ -1,6 +1,6 @@
 # chuck, because, why not?
 
-NEST_FACTOR = 1.1
+NEST_FACTOR = 1.2
 
 comparators = /\|\||&&|!=|==|!==|===|<|<=|>|>=/
 assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
@@ -326,6 +326,7 @@ analyzeClass = (cls) ->
   metrics.linesPerMethod = metrics.lines / metrics.methodCount
   metrics.statements = sum(m.statements for n, m of metrics.methods)
   metrics.complexity = sum(m.complexity for n, m of metrics.methods) - metrics.methodCount + 1
+  metrics.nestWeightedComplexity = sum(m.nestWeightedComplexity for n, m of metrics.methods) - metrics.methodCount + 1
   metrics.complexityPerMethod = metrics.complexity / metrics.methodCount
   metrics.complexityPerLine = metrics.complexity / metrics.lines
   metrics.halstead = calculateHalstead combineHalsteads hals
