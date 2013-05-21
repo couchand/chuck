@@ -53,7 +53,7 @@ countExpressionHalstead = (expression) ->
     hal.operators.push '()'
     return hal
   if expression?.receiver?
-    hals = countExpressionHalstead expression.receiver
+    hals = [countExpressionHalstead expression.receiver]
     hals.push countExpressionHalstead expression.index if expression.index?
     hal = combineHalsteads hals
     hal.operators.push '[]'
@@ -97,7 +97,7 @@ countExpressionHalstead = (expression) ->
     return hal
   return {
     operators: []
-    operands: []
+    operands: [expression]
   }
 
 calculateStatementComplexity = (statement, options) ->
@@ -145,7 +145,7 @@ calculateStatementComplexity = (statement, options) ->
 countStatementHalstead = (statement) ->
   switch statement.statement
     when "return"
-      countExpressionHalstead statement.returns
+      combineHalsteads (countExpressionHalstead ret for ret in statement.returns)
     when "throw"
       countExpressionHalstead statement.throws
     when "declaration"
@@ -167,9 +167,9 @@ countStatementHalstead = (statement) ->
     when "if"
       hals = [
         countExpressionHalstead statement.condition
-        countExpressionHalstead statement.block
+        countStatementHalstead statement.block
       ]
-      hals.push countExpressionHalstead statement.elseBlock if statement.elseBlock?
+      hals.push countStatementHalstead statement.elseBlock if statement.elseBlock?
       hal = combineHalsteads hals
       hal.operators.push 'if'
       hal.operators.push 'else' if statement.elseBlock?
@@ -177,7 +177,7 @@ countStatementHalstead = (statement) ->
     when "while", "do_while"
       hal = combineHalsteads [
         countExpressionHalstead statement.condition
-        countExpressionHalstead statement.block
+        countStatementHalstead statement.block
       ]
       hal.operators.push statement.statement
       hal
@@ -192,7 +192,7 @@ countStatementHalstead = (statement) ->
         hals = [
           countExpressionHalstead statement.domain
         ]
-      hals.push countExpressionHalstead statement.block
+      hals.push countStatementHalstead statement.block
       hal = combineHalsteads hals
       hal.operators.push 'for'
       hal
