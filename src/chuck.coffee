@@ -65,16 +65,19 @@ countExpressionHalstead = (expression) ->
   if expression?.receiver?
     hals = [countExpressionHalstead expression.receiver]
     hals.push countExpressionHalstead expression.index if expression.index?
+    hals.push countExpressionHalstead expression.field if expression.field?
     hal = combineHalsteads hals
     hal.operators.push '[]'
     return hal
   if expression?.argv?
-    hal = combineHalsteads (countExpressionHalstead arg for arg in expression.argv)
-    hal.operands.push resolveContainer expression.callee
+    hals = (countExpressionHalstead arg for arg in expression.argv)
+    hals.push countExpressionHalstead expression.callee
+    hal = combineHalsteads hals
     hal.operators.push 'new' if expression.newAllocation?
     return hal
   if expression?.callee? and expression?.initializer?
-    hal = countExpressionHalstead expression.initializer
+    hals = (countExpressionHalstead init for init in expression.initializer)
+    hal = combineHalsteads hals
     hal.operands.push resolveContainer expression.callee
     hal.operators.push 'new'
     hal.operators.push '{}'
@@ -113,7 +116,7 @@ countExpressionHalstead = (expression) ->
     return hal
   return {
     operators: []
-    operands: [expression]
+    operands: [resolveContainer expression]
   }
 
 calculateStatementComplexity = (statement, options) ->
