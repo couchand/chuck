@@ -39,6 +39,67 @@ calculateExpressionComplexity = (expression, options) ->
                calculateExpressionComplexity expression.falseValue
   0
 
+countExpressionHalstead = (expression) ->
+  if expression?.negative?
+    hal = countExpressionHalstead expression.negative
+    hal.operators.push '-'
+    return hal
+  if expression?.inverse?
+    hal = countExpressionHalstead expression.inverse
+    hal.operators.push '!'
+    return hal
+  if expression?.parenthesized?
+    hal = countExpressionHalstead expression.parenthesized
+    hal.operators.push '()'
+    return hal
+  if expression?.receiver?
+    hals = countExpressionHalstead expression.receiver
+    hals.push countExpressionHalstead expression.index if expression.index?
+    hal = combineHalsteads hals
+    hal.operators.push '[]'
+    return hal
+  if expression?.argv?
+    hal = combineHalsteads (countExpressionHalstead arg for arg in expression.argv)
+    hal.operands.push expression.callee
+    hal.operators.push 'new' if expression.newAllocation?
+    return hal
+  if expression?.callee? and expression?.initializer?
+    hal = countExpressionHalstead expression.initializer
+    hal.operators.push 'new'
+    hal.operators.push '{}'
+    return hal
+  if comparators.test expression?.operator
+    hal = combineHalsteads [
+      countExpressionHalstead expression.left
+      countExpressionHalstead expression.right
+    ]
+    hal.operators.push expression.operator
+    return hal
+  if assigners.test expression?.operator
+    hal = countExpressionHalstead expression.value
+    hal.operators.push expression.operator
+    hal.operands.push expression.name
+    return hal
+  if operators.test expression?.operator
+    hal = combineHalsteads [
+      countExpressionHalstead expression.left
+      countExpressionHalstead expression.right
+    ]
+    hal.operators.push expression.operator
+    return hal
+  if expression?.condition?
+    hal = combineHalsteads [
+      countExpressionHalstead expression.condition
+      countExpressionHalstead expression.trueValue
+      countExpressionHalstead expression.falseValue
+    ]
+    hal.operators.push '?:'
+    return hal
+  return {
+    operators: []
+    operands: []
+  }
+
 calculateStatementComplexity = (statement, options) ->
   cnf = options.conditionalNestFactor
   lnf = options.loopNestFactor
@@ -81,11 +142,93 @@ calculateStatementComplexity = (statement, options) ->
     else 0
   return cc
 
+countStatementHalstead = (statement) ->
+  switch statement.statement
+    when "return"
+      countExpressionHalstead statement.returns
+    when "throw"
+      countExpressionHalstead statement.throws
+    when "declaration"
+      hal = if statement.initializer? then countExpressionHalstead statement.initializer else
+        operators: []
+        operands: []
+      hal.operands.push statement.name
+      if statement.type.container?
+        if statement.type.container is '[]'
+          hal.operands.push "#{statement.type.contains}[]"
+        else
+          hal.operands.push "#{statement.type.container}<#{statement.type.contains}>"
+      else
+        hal.operands.push statement.type
+      hal.operators.push '=' if statement.initializer?
+      hal
+    when "assignment", "prefix", "postfix", "methodCall"
+      countExpressionHalstead statement.expression
+    when "if"
+      hals = [
+        countExpressionHalstead statement.condition
+        countExpressionHalstead statement.block
+      ]
+      hals.push countExpressionHalstead statement.elseBlock if statement.elseBlock?
+      hal = combineHalsteads hals
+      hal.operators.push 'if'
+      hal.operators.push 'else' if statement.elseBlock?
+      hal
+    when "while", "do_while"
+      hal = combineHalsteads [
+        countExpressionHalstead statement.condition
+        countExpressionHalstead statement.block
+      ]
+      hal.operators.push statement.statement
+      hal
+    when "for"
+      if statement.initializer?
+        hals = [
+          countExpressionHalstead statement.intializer
+          countExpressionHalstead statement.condition
+          countExpressionHalstead statement.increment
+        ]
+      else
+        hals = [
+          countExpressionHalstead statement.domain
+        ]
+      hals.push countExpressionHalstead statement.block
+      hal = combineHalsteads hals
+      hal.operators.push 'for'
+      hal
+    when "dml"
+      if statement.operation is 'merge'
+        hal = combineHalsteads [
+          countExpressionHalstead statement.left
+          countExpressionHalstead statement.right
+        ]
+      else
+        hal = countExpressionHalstead statement.expression
+      hal.operators.push statement.operation
+      hal
+    when "block"
+      countBlockHalstead statement.block
+    else
+        operators: []
+        operands: []
+
 calculateBlockComplexity = (block, options) ->
- cc = 0
- for statement in block
-   cc += calculateStatementComplexity statement, options
- cc
+  cc = 0
+  for statement in block
+    cc += calculateStatementComplexity statement, options
+  cc
+
+combineHalsteads = (hals) ->
+  hal =
+    operators: []
+    operands: []
+  for oneHal in hals
+    hal.operators = hal.operators.concat oneHal.operators
+    hal.operands = hal.operands.concat oneHal.operands
+  hal
+
+countBlockHalstead = (block) ->
+  combineHalsteads (countStatementHalstead statement for statement in block)
 
 calculateComplexity = (methodBody, options) ->
   options ?= {}
@@ -94,6 +237,9 @@ calculateComplexity = (methodBody, options) ->
   cc = calculateBlockComplexity methodBody, options
   cc += 1 if methodBody[methodBody.length-1].statement isnt 'return'
   cc
+
+countHalstead = (methodBody) ->
+  countBlockHalstead methodBody
 
 lineCount = (pos) ->
   pos.last_line - pos.first_line + 1
@@ -114,6 +260,7 @@ analyzeClass = (cls) ->
         conditionalNestFactor: NEST_FACTOR
         loopNestFactor: NEST_FACTOR
       )
+      halstead: countHalstead m.body
   metrics.methodCount = metrics.methods.length
   metrics.propertyCount = (m for m in cls.body when m.member is 'property').length
   metrics.innerClassCount = (m for m in cls.body when m.member is 'inner_class').length
