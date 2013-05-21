@@ -36,10 +36,10 @@ calculateExpressionComplexity = (expression, options) ->
     cc += calculateExpressionComplexity expr for expr in expression.initializer
     return cc
   if comparators.test expression?.operator
-    return 1 + calculateExpressionComplexity expression.left +
-               calculateExpressionComplexity expression.right
+    return calculateExpressionComplexity expression.left +
+           calculateExpressionComplexity expression.right
   if assigners.test expression?.operator
-    return 1 + calculateExpressionComplexity expression.value
+    return calculateExpressionComplexity expression.value
   if operators.test expression?.operator
     return calculateExpressionComplexity expression.left +
            calculateExpressionComplexity expression.right
