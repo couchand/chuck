@@ -6,6 +6,16 @@ comparators = /\|\||&&|!=|==|!==|===|<|<=|>|>=/
 assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
 operators = /\+|-|\*|\//
 
+resolveContainer = (type) ->
+  if type.container?
+    contains = (resolveContainer t for t in [].concat type.contains).join ', '
+    if type.container is '[]'
+      "#{contains}[]"
+    else
+      "#{type.container}<#{contains}>"
+  else
+    type
+
 calculateExpressionComplexity = (expression, options) ->
   if expression?.negative?
     return calculateExpressionComplexity expression.negative
@@ -60,13 +70,19 @@ countExpressionHalstead = (expression) ->
     return hal
   if expression?.argv?
     hal = combineHalsteads (countExpressionHalstead arg for arg in expression.argv)
-    hal.operands.push expression.callee
+    hal.operands.push resolveContainer expression.callee
     hal.operators.push 'new' if expression.newAllocation?
     return hal
   if expression?.callee? and expression?.initializer?
     hal = countExpressionHalstead expression.initializer
+    hal.operands.push resolveContainer expression.callee
     hal.operators.push 'new'
     hal.operators.push '{}'
+    return hal
+  if expression?.callee?
+    hal =
+      operands: [resolveContainer expression.callee]
+      operators: ['{}']
     return hal
   if comparators.test expression?.operator
     hal = combineHalsteads [
@@ -153,13 +169,7 @@ countStatementHalstead = (statement) ->
         operators: []
         operands: []
       hal.operands.push statement.name
-      if statement.type.container?
-        if statement.type.container is '[]'
-          hal.operands.push "#{statement.type.contains}[]"
-        else
-          hal.operands.push "#{statement.type.container}<#{statement.type.contains}>"
-      else
-        hal.operands.push statement.type
+      hal.operands.push resolveContainer statement.type
       hal.operators.push '=' if statement.initializer?
       hal
     when "assignment", "prefix", "postfix", "methodCall"
