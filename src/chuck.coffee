@@ -269,8 +269,29 @@ calculateComplexity = (methodBody, options) ->
   cc += 1 if methodBody[methodBody.length-1].statement isnt 'return'
   cc
 
+unique = (strs) ->
+  uniq = []
+  for str in strs when -1 is uniq.indexOf str
+    uniq.push str
+  uniq
+
 countHalstead = (methodBody) ->
   countBlockHalstead methodBody
+
+calculateHalstead = (all) ->
+  m =
+    totalOperators: all.operators.length
+    totalOperands: all.operands.length
+    uniqueOperators: unique(all.operators).length
+    uniqueOperands: unique(all.operands).length
+  m.programLength = m.totalOperators + m.totalOperands
+  m.vocabularySize = m.uniqueOperators + m.uniqueOperands
+  m.programVolume = m.programLength * Math.log(m.vocabularySize)/Math.log(2)
+  m.difficultyLevel = (m.uniqueOperators / 2) * (m.totalOperands / m.uniqueOperands)
+  m.implementationEffort = m.programVolume * m.difficultyLevel
+  m.implementationTime = m.implementationEffort / 18
+  m.deliveredBugs = Math.pow( m.implementationEffort, 2/3 )/3000
+  m
 
 lineCount = (pos) ->
   pos.last_line - pos.first_line + 1
@@ -281,7 +302,12 @@ sum = (vals) ->
 
 analyzeClass = (cls) ->
   metrics = {}
-  metrics.methods = for m in cls.body when m.member is 'method'
+  metrics.methods = []
+  hals = []
+  for m in cls.body when m.member is 'method'
+    hal = countHalstead m.body
+    hals.push hal
+    r =
       name: m.name
       lines: lineCount m.position
       parameters: m.parameters.length
@@ -291,7 +317,8 @@ analyzeClass = (cls) ->
         conditionalNestFactor: NEST_FACTOR
         loopNestFactor: NEST_FACTOR
       )
-      halstead: countHalstead m.body
+      halstead: calculateHalstead hal
+    metrics.methods.push r
   metrics.methodCount = metrics.methods.length
   metrics.propertyCount = (m for m in cls.body when m.member is 'property').length
   metrics.innerClassCount = (m for m in cls.body when m.member is 'inner_class').length
@@ -301,6 +328,7 @@ analyzeClass = (cls) ->
   metrics.complexity = sum(m.complexity for n, m of metrics.methods)
   metrics.complexityPerMethod = metrics.complexity / metrics.methodCount
   metrics.complexityPerLine = metrics.complexity / metrics.lines
+  metrics.halstead = calculateHalstead combineHalsteads hals
   metrics
 
 module.exports =
