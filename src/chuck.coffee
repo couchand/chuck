@@ -130,7 +130,7 @@ calculateStatementComplexity = (statement, options) ->
       cc = calculateExpressionComplexity statement.throws, options
     when "declaration"
       cc = if statement.initializer? then 1 + calculateExpressionComplexity statement.initializer else 0
-    when "assignment", "prefix", "postfix", "methodCall"
+    when "assignment", "prefix", "postfix", "method call"
       cc = calculateExpressionComplexity statement.expression, options
     when "if"
       cc = if statement.elseBlock? then 2 else 1
@@ -175,7 +175,7 @@ countStatementHalstead = (statement) ->
       hal.operands.push resolveContainer statement.type
       hal.operators.push '=' if statement.initializer?
       hal
-    when "assignment", "prefix", "postfix", "methodCall"
+    when "assignment", "prefix", "postfix", "method call"
       countExpressionHalstead statement.expression
     when "if"
       hals = [
