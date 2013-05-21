@@ -7,7 +7,7 @@ assigners = /\=|\+=|-=|\*=|\/=|\+\+|--/
 operators = /\+|-|\*|\//
 
 resolveContainer = (type) ->
-  if type.container?
+  if type?.container?
     contains = (resolveContainer t for t in [].concat type.contains).join ', '
     if type.container is '[]'
       "#{contains}[]"
