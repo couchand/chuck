@@ -8,38 +8,14 @@ chuck = require './chuck'
 client = couch.createClient 5984, 'localhost'
 db = client.db 'chuckdb'
 
-toDocId = (name) ->
-  name.toLowerCase().replace /\s/g, '-'
-
-class ClientDoc
-  constructor: (@name, cb) ->
-    @id = toDocId @name
-    @load cb
-
-  load: (cb) ->
-    t = @
-    db.getDoc @id, (err, doc) ->
-      if err
-        t.doc =
-          client: t.name
-          scans: []
-      else
-        t.doc = doc
-      cb()
-
-  save: (cb) ->
-    t = @
-    db.saveDoc @id, @doc, (err, r) ->
-      if err
-        cb err
-      else
-        t.load cb
-
 class Scanner
   constructor: (@client, @environment) ->
     @environment ?= 'production'
     @timestamp = new Date()
     @classes = []
+
+  docId: ->
+    "#{@client}-#{@environment}-#{@timestamp}".toLowerCase().replace /\s/g, '-'
 
   scan: (name, cls) ->
     try
@@ -48,10 +24,11 @@ class Scanner
       @classes.push { name: name, error: "#{err}" }
 
   save: (cb) ->
-    t = @
-    m = new ClientDoc @client, ->
-      m.doc.scans.unshift t
-      m.save cb
+    db.saveDoc @docId(), @, (err, r) ->
+      if err
+        cb err
+      else
+        cb('success')
 
 module.exports = (client, environment) ->
   new Scanner client, environment

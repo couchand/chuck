@@ -1,24 +1,18 @@
 function(doc) {
-  if ( !doc.client || !doc.scans ) {
+  if ( !doc.client || !doc.classes ) {
     return;
   }
 
-  for(class in doc.scans[0].classes){
-    var cls = doc.scans[0].classes[class];
-    if( !cls.error ){
+  for(class in doc.classes){
+    var cls = doc.classes[class];
+    if ( !cls.error ) {
       emit( doc.client + ":" + cls.name, {
-        "client": doc.client,
-        "name": cls.name,
-        "complexity": cls.complexity || 0,
-        "methods": cls.methodCount,
-        "lines": cls.lines
-      });
-    }
-    else {
-      emit( doc.client + ":" + cls.name, {
-        "client": doc.client,
-        "name": cls.name,
-        "error": cls.error
+        timestamp: doc.timestamp,
+        client: doc.client,
+        name: cls.name,
+        complexity: cls.complexity,
+        lines: cls.lines,
+        methods: cls.methods.length
       });
     }
   }

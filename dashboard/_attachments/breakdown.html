@@ -108,7 +108,7 @@ svg.append("text")
     .attr("transform", "translate(" + (width*0.8+margin.left) + "," + (margin.top+height+margin.bottom-15) + ")")
     .text("Lines of Code");
 
-d3.json("_view/class_details", function(viewdata) {
+d3.json("_view/class_details?group=true", function(viewdata) {
   var rows = viewdata["rows"], data2 = [], lineNos = {};
   var complexities = [], byClient = [], classes = {};
 

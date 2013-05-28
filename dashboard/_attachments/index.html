@@ -77,7 +77,7 @@ var svg = d3.select("body").append("svg")
 var focus = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.json("_view/class_details", function(viewdata) {
+d3.json("_view/class_details?group=true", function(viewdata) {
   var rows = viewdata["rows"], data = [], clients = {};
   var complexities = [], byClient = [], classes = {};
   var parseClients = {}, noParseClients = {}, parseByClient = [];
