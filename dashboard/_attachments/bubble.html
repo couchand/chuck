@@ -52,11 +52,16 @@ var arc = d3.svg.arc()
 
 var pie = d3.layout.pie()
     .sort(null)
-    .value(function(d) { return d.values; });
+    .value(function(d) { return d.values.lines; });
 
 var clientLines = d3.nest()
     .key(function(d) { return d.key[1]; })
-    .rollup(function(v) { return d3.sum( v, function(d) { return d.value.lines; } ); });
+    .rollup(function(v) {
+      return {
+        lines: d3.sum( v, function(d) { return d.value.lines; } ),
+        count: d3.sum( v, function(d) { return d.value.classes; } )
+      };
+    });
 
 var clientGradeLines = d3.nest()
     .key(function(d) { return d.key[0]; })
@@ -103,7 +108,8 @@ d3.json("_view/client_details?group=true", function(error, details) {
       .attr("d", arc)
       .attr("title", function(d) {
         return d.data.key + ": " +
-               format(d.data.values) + " lines";
+               format(d.data.values.count) + " classes, " +
+               format(d.data.values.lines) + " lines";
       });
 
   node.append("text")
