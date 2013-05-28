@@ -1,32 +1,19 @@
 function(doc) {
-  if ( !doc.client || !doc.scans ) {
+  if ( !doc.client || !doc.classes ) {
     return;
   }
 
-  for(i in doc.scans){
-  scan = doc.scans[i];
-  if ( scan.timestamp == "2013-05-13T18:53:09.161Z") continue;
-
-  for(class in scan.classes){
-    var cls = scan.classes[class];
-    if( !cls.error ){
-      emit( doc.client + ":" + cls.name + ":" + scan.timestamp, {
-        "client": doc.client,
-        "name": cls.name,
-        "timestamp": scan.timestamp,
-        "complexity": cls.complexity || 0,
-        "methods": cls.methodCount,
-        "lines": cls.lines
-      });
-    }
-    else {
-      emit( doc.client + ":" + cls.name + ":" + scan.timestamp, {
-        "client": doc.client,
-        "name": cls.name,
-        "timestamp": scan.timestamp,
-        "error": cls.error
+  for(class in doc.classes){
+    var cls = doc.classes[class];
+    if ( !cls.error ) {
+      emit( doc.client + ":" + cls.name + ":" + doc.timestamp, {
+        timestamp: doc.timestamp,
+        client: doc.client,
+        name: cls.name,
+        complexity: cls.complexity,
+        lines: cls.lines,
+        methods: cls.methods.length
       });
     }
   }
-}
 }
