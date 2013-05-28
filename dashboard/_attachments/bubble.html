@@ -100,7 +100,11 @@ d3.json("_view/client_details?group=true", function(error, details) {
       })
     .enter().append("path")
       .attr("class", function(d) { return d.data.key; })
-      .attr("d", arc);
+      .attr("d", arc)
+      .attr("title", function(d) {
+        return d.data.key + ": " +
+               format(d.data.values) + " lines";
+      });
 
   node.append("text")
       .attr("dy", ".3em")
