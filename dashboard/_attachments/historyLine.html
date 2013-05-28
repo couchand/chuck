@@ -88,7 +88,7 @@ var xAxis = d3.svg.axis()
 
 var brush = d3.svg.brush()
     .x(x2)
-    .on("brush", brushed);
+    .on("brushend", brushed);
 
 var svgWidth = width + margin.left + margin.right,
     svgHeight = height + height2 + margin.top + margin.bottom + margin2.top + margin2.bottom;
@@ -174,7 +174,7 @@ function squareData(data) {
 
 function brushed() {
     x.domain(brush.empty() ? x2.domain() : brush.extent());
-    focus.select("path.cls")
+    focus.selectAll("path.cls")
         .attr("d", function(d) { return area(d.values); });
     focus.select(".x.axis")
         .call(xAxis);
