@@ -54,15 +54,8 @@ var duration = 400;
 var width = 800, height = 500,
     margin = { top: 50, right: 50, bottom: 50, left: 50 };
 
-var percentile = d3.scale.quantile()
-    .range([0,1,2,3,4,5,6,7,8,9]);
-
-var evaluate = d3.scale.threshold()
-    .domain([3, 6, 8, 9])
-    .range([1, 2, 3, 4, 5]);
-
 var grade = d3.scale.threshold()
-    .domain([2, 3, 4, 5])
+    .domain([3, 8, 12, 20])
     .range(['A','B','C','D','F']);
 
 var gradeNum = d3.scale.ordinal()
@@ -110,7 +103,7 @@ svg.append("text")
 
 d3.json("_view/class_details?group=true", function(viewdata) {
   var rows = viewdata["rows"], data2 = [], lineNos = {};
-  var complexities = [], byClient = [], classes = {};
+  var byClient = [], classes = {};
 
   rows.forEach(function(row) {
     if ( clients.indexOf( row.value.client ) == -1 ) {
@@ -130,13 +123,7 @@ d3.json("_view/class_details?group=true", function(viewdata) {
         data.push(row.value);
         data2.push(row.value);
     }
-
-    if ( ! row.value.error ) {
-        complexities.push( row.value.complexity );
-    }
   });
-
-  percentile.domain( complexities );
 
   data.forEach(function(cls) {
     if ( !lineNos[cls.client] ) {
@@ -152,7 +139,7 @@ d3.json("_view/class_details?group=true", function(viewdata) {
         return;
     }
 
-    cls.grade = grade(evaluate(percentile( cls.complexity )));
+    cls.grade = grade( cls.complexity );
   });
 
   focus.append("g")
