@@ -4,6 +4,7 @@ function(doc) {
   }
 
   var m = {
+    "timestamp": doc.timestamp,
     "classes": 0,
     "parse": 0,
     "complexity": 0,
