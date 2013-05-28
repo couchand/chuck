@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+text {
+  font: 10px sans-serif;
+}
+
+path.A {
+    fill: #00aa00;
+}
+path.B {
+    fill: #80cc00;
+}
+path.C {
+    fill: #ffee00;
+}
+path.D {
+    fill: #f77700;
+}
+path.F {
+    fill: #ee0000;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var diameter = 600,
+    format = d3.format(",d");
+
+var bubble = d3.layout.pack()
+    .sort(null)
+    .size([diameter, diameter])
+    .value(function (d) {
+      return d.lines;
+    })
+    .padding(1.5);
+
+var grade = d3.scale.threshold()
+    .domain([3, 8, 12, 20])
+    .range(['A','B','C','D','F']);
+
+var gradeNum = d3.scale.ordinal()
+    .domain(['A','B','C','D','F'])
+    .range([1, 2, 3, 4, 5]);
+
+var arc = d3.svg.arc()
+    .outerRadius(function(d) { return d.data.r; })
+    .innerRadius(function(d) { return d.data.r / 4; });
+
+var pie = d3.layout.pie()
+    .sort(null)
+    .value(function(d) { return d.values; });
+
+var clientLines = d3.nest()
+    .key(function(d) { return d.key[1]; })
+    .rollup(function(v) { return d3.sum( v, function(d) { return d.value.lines; } ); });
+
+var clientGradeLines = d3.nest()
+    .key(function(d) { return d.key[0]; })
+    .rollup(clientLines.entries);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", diameter)
+    .attr("height", diameter)
+    .attr("class", "bubble");
+
+d3.json("_view/client_summary?group=true", function(error, root) {
+d3.json("_view/client_details?group=true", function(error, details) {
+
+  var linesByGradeByClient = clientGradeLines.map( details.rows );
+  console.log( linesByGradeByClient );
+
+  var node = svg.selectAll(".client")
+      .data(bubble.nodes(clients(root))
+      .filter(function(d) { return !d.children; }))
+    .enter().append("g")
+      .attr("class", "client")
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+  node.append("title")
+      .text(function(d) { return d.client + ": " + format(d.lines); });
+
+  var grades = node.append("g")
+      .attr("class", "grades")
+      .datum(function(d) {
+        lines = linesByGradeByClient[d.client];
+        lines.r = d.r;
+        return lines;
+      });
+
+  grades.selectAll("path")
+      .data(function(d) {
+        var p = pie(d);
+        for ( var i in p ) {
+          p[i].data.r = d.r;
+        }
+        return p;
+      })
+    .enter().append("path")
+      .attr("class", function(d) { return d.data.key; })
+      .attr("d", arc);
+
+  node.append("text")
+      .attr("dy", ".3em")
+      .style("text-anchor", "middle")
+      .text(function(d) { return d.client.substring(0, d.r / 3); });
+
+});
+});
+
+function clients(root) {
+  var clients = [];
+
+  for ( var i in root.rows ) {
+    clients.push( root.rows[i].value );
+  }
+
+  return {children: clients};
+}
+
+</script>
