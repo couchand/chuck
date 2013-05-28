@@ -4,6 +4,7 @@ function(doc) {
   }
 
   var m = {
+    "client": doc.client,
     "timestamp": doc.timestamp,
     "classes": 0,
     "parse": 0,
