@@ -243,6 +243,25 @@ countStatementHalstead = (statement) ->
         operators: []
         operands: []
 
+countStatementAssertions = (statement) ->
+  assertions = 0
+  switch statement.statement
+    when "method call"
+      console.error statement.expression
+      if statement.expression.callee.match /^System.assert[^ ]*$/i
+        assertions = 1
+    when "if"
+      assertions += countStatementAssertions statement.block
+      assertions += countStatementAssertions statement.elseBlock if statement.elseBlock?
+    when "while", "do_while"
+      assertions = countStatementAssertions statement.block
+    when "for"
+      assertions = countStatementAssertions statement.block
+    when "block"
+      assertions = countStatementAssertions statement.block
+    else 0
+  return assertions
+
 calculateBlockComplexity = (block, options) ->
   cc = 0
   for statement in block
@@ -260,6 +279,12 @@ combineHalsteads = (hals) ->
 
 countBlockHalstead = (block) ->
   combineHalsteads (countStatementHalstead statement for statement in block)
+
+countBlockAssertions = (block) ->
+  assertions = 0
+  for statement in block
+    assertions += countStatementAssertions statement
+  assertions
 
 calculateComplexity = (methodBody, options) ->
   options ?= {}
@@ -293,6 +318,9 @@ calculateHalstead = (all) ->
   m.deliveredBugs = Math.pow( m.implementationEffort, 2/3 )/3000
   m
 
+countAssertions = (methodBody) ->
+  countBlockAssertions methodBody
+
 lineCount = (pos) ->
   pos.last_line - pos.first_line + 1
 
@@ -318,6 +346,7 @@ analyzeClass = (cls) ->
     r =
       name: m.name
       type: if isTest m then 'test' else 'method'
+      assertions: countAssertions m.body
       lines: lineCount m.position
       parameters: m.parameters.length
       statements: m.body.length
@@ -335,6 +364,7 @@ analyzeClass = (cls) ->
   metrics.linesPerMethod = metrics.lines / metrics.methodCount
   metrics.statements = sum(m.statements for n, m of metrics.methods)
   metrics.complexity = sum(m.complexity for n, m of metrics.methods)
+  metrics.assertions = sum(m.assertions for n, m of metrics.methods)
   metrics.nestWeightedComplexity = sum(m.nestWeightedComplexity for n, m of metrics.methods)
   metrics.complexityPerMethod = metrics.complexity / metrics.methodCount
   metrics.complexityPerLine = metrics.complexity / metrics.lines

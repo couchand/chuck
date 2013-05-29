@@ -74,6 +74,7 @@ var color = d3.scale.ordinal()
 
 var x = d3.scale.log().rangeRound([0, width]),
     y = d3.scale.log().rangeRound([height, 0]),
+    y2 = d3.scale.linear().rangeRound([height, 0]),
     z = d3.scale.sqrt().range([4, 12]),
     w = d3.scale.category20();
 
@@ -88,7 +89,11 @@ var xAxis = d3.svg.axis()
         .scale(y)
         .tickFormat(formatLog)
         .tickSize(0)
-        .orient("left");
+        .orient("left"),
+    y2Axis = d3.svg.axis()
+        .scale(y2)
+        .tickSize(0)
+        .orient("right");
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -102,6 +107,12 @@ svg.append("g")
     .append("text")
     .attr("transform", "translate(" + (height*0.2+margin.top) + ",-5)")
     .text("Complexity per Method");
+
+svg.append("g")
+    .attr("transform", "rotate(90)")
+    .append("text")
+    .attr("transform", "translate(" + (height*0.2+margin.top) + "," + (-1 * (width+margin.left+25)) + ")")
+    .text("Assertions per Method");
 
 svg.append("text")
     .attr("transform", "translate(" + (width*0.8+margin.left) + "," + (margin.top+height+margin.bottom-15) + ")")
@@ -121,9 +132,12 @@ d3.json("_view/class_details?group=true", function(viewdata) {
         showing[row.value.client] = row.value.client == selectedClient;
       }
     }
+    row.value.complexity = row.value.complexity || 0;
+    row.value.assertions = row.value.assertions || 0;
 
     if ( ! row.value.methods ) return; // count as one method, ignore for percentiles
     row.value.complexity = row.value.complexity / row.value.methods;
+    row.value.assertions = row.value.assertions / row.value.methods;
 
     if ( !row.value.error && row.value.methods > 0 ) {
         data.push(row.value);
@@ -157,6 +171,11 @@ d3.json("_view/class_details?group=true", function(viewdata) {
       .attr("class", "y axis")
       .call(yAxis);
 
+  focus.append("g")
+      .attr("class", "y2 axis")
+      .attr("transform", "translate(" + width + ",0)")
+      .call(y2Axis);
+
   toggleClient();
 });
 
@@ -177,10 +196,12 @@ function toggleClient( client ) {
 function update( data ) {
   x.domain(d3.extent(data.map(function(d) { return d.lines; })));
   y.domain(d3.extent(data.map(function(d) { return d.complexity; })));
+  y2.domain(d3.extent(data.map(function(d) { return d.assertions; })));
   z.domain(d3.extent(data.map(function(d) { return d.methods; })));
 
   focus.selectAll("g.x").transition().call(xAxis);
   focus.selectAll("g.y").transition().call(yAxis);
+  focus.selectAll("g.y2").transition().call(y2Axis);
 
   xgridlines = focus.selectAll("line.x")
       .data(x.ticks());
@@ -193,7 +214,7 @@ function update( data ) {
       .attr("x1", x)
       .attr("x2", x);
   xgridlines.exit().remove();
-
+/*
   ygridlines = focus.selectAll("line.y")
       .data(y.ticks());
   ygridlines.enter().append("line")
@@ -205,7 +226,7 @@ function update( data ) {
       .attr("y1", y)
       .attr("y2", y);
   ygridlines.exit().remove();
-
+*/
   var cls = focus.selectAll("g.cls")
       .data(data, function (d) {
         return d.client + d.name;
@@ -230,7 +251,7 @@ function update( data ) {
   var clsUpdate = cls.transition()
       .duration(duration)
       .attr("transform", function (d) {
-        return "translate(" + x(d.lines) + "," + y(d.complexity) + ")";
+        return "translate(" + x(d.lines) + "," + (d.type == 'class' ? y(d.complexity) : y2(d.assertions)) + ")";
       });
 
   clsUpdate.select("circle")

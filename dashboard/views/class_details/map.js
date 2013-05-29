@@ -11,6 +11,7 @@ function(doc) {
         client: doc.client,
         name: cls.name,
         type: cls.type,
+        assertions: cls.assertions,
         complexity: cls.complexity,
         lines: cls.lines,
         methods: cls.methods.length
