@@ -2,7 +2,7 @@
 
 couch = require 'felix-couchdb'
 
-p = require '../lib/ascent-0.0.2'
+p = require '../lib/ascent-0.0.4'
 chuck = require './chuck'
 
 client = couch.createClient 5984, 'localhost'
