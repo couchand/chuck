@@ -47,7 +47,7 @@ for ( var i in params ) {
     }
 }
 
-var clients = [], data = [], showing = {};
+var clients = [], data = [], showing = {}, type = 'all';
 
 var duration = 400;
 
@@ -161,6 +161,7 @@ function toggleClient( client ) {
 
   data.forEach(function(cls) {
     if ( !showing[cls.client] ) return;
+    if ( type != 'all' && type != cls.type ) return;
     data2.push(cls);
   });
 

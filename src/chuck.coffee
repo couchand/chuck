@@ -300,8 +300,16 @@ sum = (vals) ->
   s = (s or 0) + v for v in vals
   s
 
+isTest = (methodOrClass) ->
+  for modifier in methodOrClass.modifiers
+    if modifier is 'testMethod' or modifier.annotation is '@isTest'
+      return yes
+  return no
+
 analyzeClass = (cls) ->
-  metrics = { name: cls.name }
+  metrics =
+    name: cls.name
+    type: if isTest cls then 'test' else 'class'
   metrics.methods = []
   hals = []
   for m in cls.body when m.member is 'method'
@@ -309,6 +317,7 @@ analyzeClass = (cls) ->
     hals.push hal
     r =
       name: m.name
+      type: if isTest m then 'test' else 'method'
       lines: lineCount m.position
       parameters: m.parameters.length
       statements: m.body.length

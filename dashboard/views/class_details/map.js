@@ -10,6 +10,7 @@ function(doc) {
         timestamp: doc.timestamp,
         client: doc.client,
         name: cls.name,
+        type: cls.type,
         complexity: cls.complexity,
         lines: cls.lines,
         methods: cls.methods.length
