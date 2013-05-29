@@ -9,6 +9,12 @@
     .cls circle {
         opacity: .6
     }
+    .cls.class {
+        stroke: blue;
+    }
+    .cls.test {
+        stroke: red;
+    }
     .axis path,
     .axis line {
         fill: none;
@@ -207,7 +213,7 @@ function update( data ) {
 
   cls.enter()
     .append("g")
-      .attr("class", "cls")
+      .attr("class", function(d) { return "cls " + d.type; })
       .attr("transform", "translate(0,0)")
     .append("circle")
       .attr("title", function (d) {
